@@ -14,77 +14,57 @@ export const PassageOrderDisplay = ({ teams, onClear }: PassageOrderDisplayProps
     }
 
     return (
-        <div className="card" style={{ marginTop: 'var(--spacing-lg)' }}>
-            <div className="flex justify-between items-center mb-md">
-                <h3>📊 Ordre de Passage</h3>
-                <button onClick={onClear} className="btn-secondary" style={{ fontSize: '0.875rem' }}>
-                    Réinitialiser
-                </button>
-            </div>
+        <div className="container py-8">
+            <div className="card">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="flex items-center gap-2 text-xl font-bold">
+                        <span className="text-2xl">📊</span>
+                        Ordre de Passage
+                    </h3>
+                    <button onClick={onClear} className="btn-secondary text-sm">
+                        Réinitialiser
+                    </button>
+                </div>
 
-            <div style={{ display: 'grid', gap: 'var(--spacing-sm)' }}>
-                {orderedTeams.map(team => (
-                    <div
-                        key={team.id}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 'var(--spacing-md)',
-                            padding: 'var(--spacing-md)',
-                            background: 'var(--color-surface)',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--color-border)'
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                background: team.passageOrder === 1
-                                    ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
-                                    : team.passageOrder === 2
-                                        ? 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)'
-                                        : team.passageOrder === 3
-                                            ? 'linear-gradient(135deg, #CD7F32 0%, #B8733C 100%)'
-                                            : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#fff',
-                                fontWeight: 700,
-                                fontSize: '1.125rem',
-                                flexShrink: 0
-                            }}
-                        >
-                            {team.passageOrder}
-                        </div>
+                <div className="grid gap-3">
+                    {orderedTeams.map(team => {
+                        const isTop3 = team.passageOrder && team.passageOrder <= 3;
+                        const gradients: Record<number, string> = {
+                            1: 'from-amber-400 to-yellow-500',
+                            2: 'from-slate-300 to-slate-400',
+                            3: 'from-amber-600 to-orange-600'
+                        };
 
-                        <div style={{ flex: 1 }}>
-                            <h4 style={{ margin: 0, fontSize: '1rem' }}>{team.name}</h4>
-                            {team.description && (
-                                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-                                    {team.description}
-                                </p>
-                            )}
-                        </div>
-
-                        {team.passageTime && (
+                        return (
                             <div
-                                style={{
-                                    padding: 'var(--spacing-sm) var(--spacing-md)',
-                                    background: 'rgba(99, 102, 241, 0.1)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    fontWeight: 600,
-                                    color: 'var(--color-primary)',
-                                    fontSize: '0.875rem'
-                                }}
+                                key={team.id}
+                                className={`flex items-center gap-4 p-4 rounded-xl border transition-all hover:-translate-x-1 ${isTop3
+                                        ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/30'
+                                        : 'bg-slate-800/50 border-slate-700/50'
+                                    }`}
                             >
-                                {team.passageTime}
+                                <div
+                                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${team.passageOrder && gradients[team.passageOrder]
+                                            ? `bg-gradient-to-br ${gradients[team.passageOrder]}`
+                                            : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                                        }`}
+                                >
+                                    {team.passageOrder}
+                                </div>
+
+                                <div className="flex-1">
+                                    <h4 className="font-semibold text-white">{team.name}</h4>
+                                </div>
+
+                                {team.passageTime && (
+                                    <div className="px-4 py-2 bg-indigo-500/20 rounded-lg font-semibold text-indigo-300 text-sm">
+                                        {team.passageTime}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                ))}
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

@@ -1,14 +1,27 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { User } from '../types';
-import { loadData } from '../utils/storage';
+import type { User, Team } from '../types';
+import { loadData, saveData } from '../utils/storage';
+
+// Générer un mot de passe aléatoire
+const generateRandomPassword = (): string => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+};
 
 interface AuthContextType {
     user: User | null;
+    currentTeam: Team | null;
     login: (username: string, password: string) => boolean;
+    loginTeam: (email: string, password: string) => { success: boolean; isFirstLogin: boolean; generatedPassword?: string };
     logout: () => void;
     isAuthenticated: boolean;
     isAdmin: boolean;
+    isTeam: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,12 +40,16 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(null);
+    const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
 
     useEffect(() => {
-        // Check for existing session
-        const sessionUser = sessionStorage.getItem('current_user');
+        const sessionUser = localStorage.getItem('current_user');
+        const sessionTeam = localStorage.getItem('current_team');
         if (sessionUser) {
             setUser(JSON.parse(sessionUser));
+        }
+        if (sessionTeam) {
+            setCurrentTeam(JSON.parse(sessionTeam));
         }
     }, []);
 
@@ -44,24 +61,95 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (foundUser) {
             setUser(foundUser);
-            sessionStorage.setItem('current_user', JSON.stringify(foundUser));
+            localStorage.setItem('current_user', JSON.stringify(foundUser));
             return true;
         }
 
         return false;
     };
 
+    const loginTeam = (email: string, password: string): { success: boolean; isFirstLogin: boolean; generatedPassword?: string } => {
+        const data = loadData();
+
+        // Chercher l'équipe par email généré
+        const team = data.teams.find(t => t.generatedEmail === email);
+
+        if (!team) {
+            console.log('Team not found for email:', email);
+            return { success: false, isFirstLogin: false };
+        }
+
+        console.log('Team found:', team.name, 'hasLoggedIn:', team.hasLoggedIn, 'has password:', !!team.password);
+
+        // Première connexion - pas de mot de passe fourni ET l'équipe n'a jamais eu de mot de passe
+        if (!password && !team.password) {
+            const newPassword = generateRandomPassword();
+            console.log('First login detected! Generating password:', newPassword);
+
+            // Sauvegarder le mot de passe
+            team.password = newPassword;
+            team.hasLoggedIn = true;
+            const teamIndex = data.teams.findIndex(t => t.id === team.id);
+            data.teams[teamIndex] = team;
+            saveData(data);
+
+            // Créer un utilisateur virtuel
+            const teamUser: User = {
+                id: `team-user-${team.id}`,
+                username: team.generatedEmail || team.name,
+                password: newPassword,
+                role: 'team',
+                teamId: team.id
+            };
+
+            setUser(teamUser);
+            setCurrentTeam(team);
+            localStorage.setItem('current_user', JSON.stringify(teamUser));
+            localStorage.setItem('current_team', JSON.stringify(team));
+
+            return { success: true, isFirstLogin: true, generatedPassword: newPassword };
+        }
+
+        // Connexions suivantes - vérifier le mot de passe
+        if (team.password && team.password === password) {
+            console.log('Password match! Logging in...');
+            const teamUser: User = {
+                id: `team-user-${team.id}`,
+                username: team.generatedEmail || team.name,
+                password: team.password,
+                role: 'team',
+                teamId: team.id
+            };
+
+            setUser(teamUser);
+            setCurrentTeam(team);
+            localStorage.setItem('current_user', JSON.stringify(teamUser));
+            localStorage.setItem('current_team', JSON.stringify(team));
+
+            return { success: true, isFirstLogin: false };
+        }
+
+        // Mot de passe incorrect ou manquant pour une équipe qui a déjà un mot de passe
+        console.log('Password mismatch or missing');
+        return { success: false, isFirstLogin: false };
+    };
+
     const logout = () => {
         setUser(null);
-        sessionStorage.removeItem('current_user');
+        setCurrentTeam(null);
+        localStorage.removeItem('current_user');
+        localStorage.removeItem('current_team');
     };
 
     const value: AuthContextType = {
         user,
+        currentTeam,
         login,
+        loginTeam,
         logout,
         isAuthenticated: user !== null,
-        isAdmin: user?.role === 'admin'
+        isAdmin: user?.role === 'admin',
+        isTeam: user?.role === 'team'
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -51,7 +51,7 @@ export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModal
         const teams = extractTeamsFromColumn(preview, selectedNameColumn, selectedDescColumn || undefined);
 
         if (teams.length === 0) {
-            setError('Aucune équipe trouvée dans la colonne sélectionnée');
+            setError('Aucun projet trouvé dans la colonne sélectionnée');
             return;
         }
 
@@ -72,7 +72,7 @@ export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModal
         : 0;
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="📥 Importer des Équipes depuis Excel">
+        <Modal isOpen={isOpen} onClose={handleClose} title="📥 Importer des Projets depuis Excel">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
 
                 <div className="form-group">
@@ -170,7 +170,7 @@ export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModal
                                 border: '1px solid var(--color-primary)'
                             }}>
                                 <p style={{ margin: 0, color: 'var(--color-primary)', fontWeight: 500 }}>
-                                    📊 {teamsCount} équipe{teamsCount > 1 ? 's' : ''} à importer
+                                    📊 {teamsCount} projet{teamsCount > 1 ? 's' : ''} à importer
                                 </p>
                             </div>
                         )}
@@ -186,7 +186,7 @@ export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModal
                         className="btn-primary"
                         disabled={!preview || !selectedNameColumn || teamsCount === 0}
                     >
-                        Importer {teamsCount > 0 && teamsCount} {teamsCount > 0 && (teamsCount > 1 ? 'équipes' : 'équipe')}
+                        Importer {teamsCount > 0 && teamsCount} {teamsCount > 0 && (teamsCount > 1 ? 'projets' : 'projet')}
                     </button>
                 </div>
             </div>

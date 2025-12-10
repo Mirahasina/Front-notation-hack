@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { Navbar } from '../../components/Navbar';
 import { useData } from '../../contexts/DataContext';
 import { getJuryProgress, areAllTeamsScored } from '../../utils/calculations';
-import './AdminDashboard.css';
 
 export const AdminDashboard = () => {
     const { users, teams, criteria, teamScores } = useData();

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Navbar } from '../../components/Navbar';
 import { useData } from '../../contexts/DataContext';
 import { areAllTeamsScored, calculateResults } from '../../utils/calculations';
-import './Results.css';
 
 export const Results = () => {
     const { teams, criteria, teamScores, users } = useData();
@@ -11,7 +10,7 @@ export const Results = () => {
 
     const juries = users.filter(u => u.role === 'jury');
     const allScored = areAllTeamsScored(teams, juries, teamScores);
-    const results = calculateResults(teams, teamScores, juries);
+    const results = calculateResults(teams, teamScores, juries, criteria);
 
     const getRankEmoji = (index: number) => {
         switch (index) {
@@ -40,7 +39,7 @@ export const Results = () => {
                 <div className="flex justify-between items-center mb-xl">
                     <div>
                         <h1>Résultats</h1>
-                        <p className="text-muted">Classement final des équipes</p>
+                        <p className="text-muted">Classement final des projets</p>
                     </div>
                     <Link to="/admin/dashboard" className="btn-secondary">
                         ← Retour
@@ -54,12 +53,12 @@ export const Results = () => {
                     }}>
                         <h3>⏳ Notation en cours</h3>
                         <p className="text-muted">
-                            Tous les jurys doivent noter toutes les équipes avant de finaliser les résultats.
+                            Tous les jurys doivent noter tous les projets avant de finaliser les résultats.
                         </p>
                         <div className="mt-md">
                             <strong>Statut:</strong>
                             <ul style={{ marginTop: 'var(--spacing-sm)' }}>
-                                <li>{teams.length} équipes à noter</li>
+                                <li>{teams.length} projets à noter</li>
                                 <li>{juries.length} jurys actifs</li>
                                 <li>{teamScores.filter(ts => ts.locked).length} / {teams.length * juries.length} notes enregistrées</li>
                             </ul>
@@ -72,7 +71,7 @@ export const Results = () => {
                         background: 'rgba(16, 185, 129, 0.1)',
                         borderColor: 'var(--color-success)'
                     }}>
-                        <h2>✅ Toutes les équipes ont été notées!</h2>
+                        <h2>Tous les projets ont été notés!</h2>
                         <p className="text-muted">Vous pouvez maintenant finaliser et afficher les résultats officiels.</p>
                         <button
                             onClick={() => setIsFinalized(true)}
@@ -99,12 +98,22 @@ export const Results = () => {
                                             <span className="rank-emoji">{getRankEmoji(index)}</span>
                                             <div>
                                                 <h2 className="team-name">{result.teamName}</h2>
+                                                <p style={{
+                                                    fontSize: '0.75rem',
+                                                    color: 'var(--color-primary-light)',
+                                                    fontFamily: 'monospace'
+                                                }}>
+                                                    {result.platformName}
+                                                </p>
                                                 <p className="rank-label">{getRankLabel(index)}</p>
                                             </div>
                                         </div>
                                         <div className="total-score">
-                                            <div className="score-value">{result.totalScore}</div>
-                                            <div className="score-label">points</div>
+                                            <div className="score-value">{result.averageScore.toFixed(1)}</div>
+                                            <div className="score-label">moyenne</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                                (Total: {result.totalScore.toFixed(1)} pts)
+                                            </div>
                                         </div>
                                     </div>
 
@@ -141,8 +150,8 @@ export const Results = () => {
 
                 {teams.length === 0 && (
                     <div className="card text-center">
-                        <h3>Aucune équipe enregistrée</h3>
-                        <p className="text-muted">Ajoutez des équipes dans la section "Gestion des Équipes"</p>
+                        <h3>Aucun projet enregistré</h3>
+                        <p className="text-muted">Ajoutez des projets dans la section "Gestion des Projets"</p>
                     </div>
                 )}
             </div>

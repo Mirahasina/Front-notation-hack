@@ -1,4 +1,4 @@
-import type { Team, TeamScore, TeamResult } from '../types';
+import type { Team, TeamScore, TeamResult, Criterion } from '../types';
 
 export const calculateTeamTotal = (
     teamId: string,
@@ -19,9 +19,12 @@ export const calculateTeamTotal = (
 export const calculateResults = (
     teams: Team[],
     teamScores: TeamScore[],
-    juries: { id: string; username: string }[]
+    juries: { id: string; username: string }[],
+    criteria: Criterion[] = []
 ): TeamResult[] => {
-    const results: TeamResult[] = teams.map(team => {
+    const sortedCriteria = [...criteria].sort((a, b) => a.priorityOrder - b.priorityOrder);
+
+    const results: TeamResult[] = teams.map((team, index) => {
         const juryScores = juries.map(jury => {
             const score = teamScores.find(
                 ts => ts.teamId === team.id && ts.juryId === jury.id
@@ -40,16 +43,45 @@ export const calculateResults = (
 
         const totalScore = juryScores.reduce((sum, js) => sum + js.total, 0);
 
+        const baseName = team.name.replace(/\s+/g, '_');
+        const platformName = `${baseName}_Team${index + 1}`;
+
+        const criterionScores: Record<string, number> = {};
+        criteria.forEach(c => {
+            criterionScores[c.id] = juryScores.reduce(
+                (sum, js) => sum + (js.scores[c.id] || 0),
+                0
+            );
+        });
+
+        const averageScore = juries.length > 0 ? totalScore / juries.length : 0;
+
         return {
             teamId: team.id,
             teamName: team.name,
+            platformName,
             totalScore,
+            averageScore,
+            criterionScores,
             juryScores
         };
     });
 
-    // Sort by total score descending
-    return results.sort((a, b) => b.totalScore - a.totalScore);
+    return results.sort((a, b) => {
+        if (b.totalScore !== a.totalScore) {
+            return b.totalScore - a.totalScore;
+        }
+
+        for (const criterion of sortedCriteria) {
+            const aScore = a.criterionScores[criterion.id] || 0;
+            const bScore = b.criterionScores[criterion.id] || 0;
+            if (bScore !== aScore) {
+                return bScore - aScore;
+            }
+        }
+
+        return 0;
+    });
 };
 
 export const areAllTeamsScored = (

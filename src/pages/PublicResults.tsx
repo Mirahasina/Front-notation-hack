@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { calculateResults } from '../utils/calculations';
-import './PublicResults.css';
 
 export const PublicResults = () => {
     const { eventId } = useParams<{ eventId?: string }>();
-    const { teams, teamScores, users, events } = useData();
+    const { teams, teamScores, users, events, criteria } = useData();
     const [revealed, setRevealed] = useState<number>(0);
     const [showFullList, setShowFullList] = useState(false);
 
@@ -87,7 +86,7 @@ export const PublicResults = () => {
         );
     }
 
-    const results = calculateResults(eventTeams, eventScores, juries);
+    const results = calculateResults(eventTeams, eventScores, juries, criteria);
 
     if (eventTeams.length === 0) {
         return (
@@ -159,7 +158,7 @@ export const PublicResults = () => {
                                             </div>
                                         </div>
                                         <div className="result-score">
-                                            {result.totalScore} pts
+                                            {result.averageScore.toFixed(1)} moy
                                         </div>
                                     </div>
                                 </div>
@@ -220,7 +219,7 @@ export const PublicResults = () => {
                                 {currentResult.teamName}
                             </div>
                             <div className="reveal-score">
-                                {currentResult.totalScore} points
+                                {currentResult.averageScore.toFixed(1)} moyenne
                             </div>
                         </div>
 

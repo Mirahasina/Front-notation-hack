@@ -272,3 +272,4 @@ Pour toute question ou problème, contacter l'administrateur système.
 ## 📜 Licence
 
 Projet développé pour **JuryHack 2025**
+# Front-notation-hack

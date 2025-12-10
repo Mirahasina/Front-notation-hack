@@ -3,7 +3,6 @@ import { Navbar } from '../../components/Navbar';
 import { Modal } from '../../components/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
-import './JuryScoring.css';
 
 export const JuryScoring = () => {
     const { user } = useAuth();
@@ -151,9 +150,6 @@ export const JuryScoring = () => {
                 <div className="scoring-table-container card">
                     <div className="team-name-display">
                         <h2>{currentTeam.name}</h2>
-                        {currentTeam.description && (
-                            <p className="text-muted">{currentTeam.description}</p>
-                        )}
                     </div>
 
                     <table className="scoring-table">

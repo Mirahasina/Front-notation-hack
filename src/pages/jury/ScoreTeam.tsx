@@ -5,7 +5,6 @@ import { Modal } from '../../components/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import { DEFAULT_EVENT_ID } from '../../utils/storage';
-import './ScoreTeam.css';
 
 export const ScoreTeam = () => {
     const { teamId } = useParams<{ teamId: string }>();
@@ -96,9 +95,6 @@ export const ScoreTeam = () => {
 
                 <div className="score-header card mb-xl">
                     <h1>{team.name}</h1>
-                    {team.description && (
-                        <p className="text-muted">{team.description}</p>
-                    )}
                     {isLocked && (
                         <div className="mt-md">
                             <span className="badge badge-success">✓ Notes verrouillées</span>
@@ -129,6 +125,7 @@ export const ScoreTeam = () => {
                                             type="range"
                                             min="0"
                                             max={criterion.maxScore}
+                                            step="0.5"
                                             value={scores[criterion.id] || 0}
                                             onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
                                             disabled={isLocked}
@@ -139,6 +136,7 @@ export const ScoreTeam = () => {
                                                 type="number"
                                                 min="0"
                                                 max={criterion.maxScore}
+                                                step="0.5"
                                                 value={scores[criterion.id] || 0}
                                                 onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
                                                 disabled={isLocked}

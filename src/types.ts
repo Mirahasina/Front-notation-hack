@@ -2,8 +2,9 @@ export interface User {
     id: string;
     username: string;
     password: string;
-    role: 'admin' | 'jury';
+    role: 'admin' | 'jury' | 'team';
     eventId?: string; // Jury assigned to specific event
+    teamId?: string; // Pour les utilisateurs team
 }
 
 export interface Event {
@@ -17,27 +18,31 @@ export interface Event {
 
 export interface Criterion {
     id: string;
-    eventId: string; // Belongs to specific event
+    eventId: string;
     name: string;
     maxScore: number;
+    priorityOrder: number;
 }
 
 export interface Team {
     id: string;
-    eventId: string; // Belongs to specific event
+    eventId: string;
     name: string;
-    description?: string;
-    passageOrder?: number;      // 1, 2, 3... ordre de passage
-    passageTime?: string;        // "09h00" timing optionnel
-    importedFrom?: 'manual' | 'excel'; // Traçabilité
+    email?: string; // Email de base fourni par l'admin
+    generatedEmail?: string; // email+NomProjet_Team{n}@domain.com
+    password?: string; // Mot de passe aléatoire généré
+    hasLoggedIn?: boolean; // true après première connexion
+    passageOrder?: number;
+    passageTime?: string;
+    importedFrom?: 'manual' | 'excel';
 }
 
 export interface TeamScore {
     id?: string;
     juryId: string;
     teamId: string;
-    eventId: string; // Belongs to specific event
-    scores: Record<string, number>; // criterionId -> score
+    eventId: string;
+    scores: Record<string, number>;
     locked: boolean;
     submittedAt?: string;
 }
@@ -45,7 +50,10 @@ export interface TeamScore {
 export interface TeamResult {
     teamId: string;
     teamName: string;
+    platformName: string;
     totalScore: number;
+    averageScore: number;
+    criterionScores: Record<string, number>;
     juryScores: {
         juryId: string;
         juryName: string;
