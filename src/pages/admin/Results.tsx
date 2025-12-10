@@ -51,7 +51,7 @@ export const Results = () => {
                         background: 'rgba(245, 158, 11, 0.1)',
                         borderColor: 'var(--color-warning)'
                     }}>
-                        <h3>⏳ Notation en cours</h3>
+                        <h3>Notation en cours</h3>
                         <p className="text-muted">
                             Tous les jurys doivent noter tous les projets avant de finaliser les résultats.
                         </p>

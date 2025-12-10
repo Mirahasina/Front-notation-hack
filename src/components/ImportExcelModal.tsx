@@ -72,7 +72,7 @@ export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModal
         : 0;
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="📥 Importer des Projets depuis Excel">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Importer des projets depuis excel">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
 
                 <div className="form-group">

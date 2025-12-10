@@ -79,15 +79,12 @@ export const EventsList = () => {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h1 className="flex items-center gap-3">
-                            <span className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
-                                📅
-                            </span>
-                            Gestion des Événements
+                            <span>Gestion des événements</span>
                         </h1>
                         <p className="text-slate-400 mt-1">Créez et gérez vos compétitions</p>
                     </div>
                     <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-                        + Nouvel Événement
+                        + Nouvel événement
                     </button>
                 </div>
 

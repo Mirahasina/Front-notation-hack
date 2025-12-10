@@ -45,7 +45,7 @@ export const AdminDashboard = () => {
                 <div className="admin-sections">
                     <Link to="/admin/juries" className="admin-section-card card">
                         <div className="section-header">
-                            <h3>⚖️ Gestion des Jurys</h3>
+                            <h3>Gestion des jurys</h3>
                             <span className="badge badge-primary">{juries.length}</span>
                         </div>
                         <p className="text-muted">
@@ -55,7 +55,7 @@ export const AdminDashboard = () => {
 
                     <Link to="/admin/criteria" className="admin-section-card card">
                         <div className="section-header">
-                            <h3>📋 Gestion des Critères</h3>
+                            <h3>Gestion des critères</h3>
                             <span className="badge badge-primary">{criteria.length}</span>
                         </div>
                         <p className="text-muted">
@@ -65,7 +65,7 @@ export const AdminDashboard = () => {
 
                     <Link to="/admin/teams" className="admin-section-card card">
                         <div className="section-header">
-                            <h3>👥 Gestion des Équipes</h3>
+                            <h3>Gestion des équipes</h3>
                             <span className="badge badge-primary">{teams.length}</span>
                         </div>
                         <p className="text-muted">
@@ -75,7 +75,7 @@ export const AdminDashboard = () => {
 
                     <a href="/results" target="_blank" rel="noopener noreferrer" className="admin-section-card card">
                         <div className="section-header">
-                            <h3>🏆 Résultats Publics</h3>
+                            <h3>🏆 Résultats publics</h3>
                             {allScored && <span className="badge badge-success">Prêt</span>}
                         </div>
                         <p className="text-muted">

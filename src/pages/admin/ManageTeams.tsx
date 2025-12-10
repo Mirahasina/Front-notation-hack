@@ -8,7 +8,6 @@ import { useData } from '../../contexts/DataContext';
 import { assignPassageOrder, clearPassageOrder } from '../../utils/randomizer';
 import { exportTeamsToExcel } from '../../utils/excelExport';
 
-// Générer l'email de plateforme
 const generatePlatformEmail = (baseEmail: string, teamName: string, index: number): string => {
     if (!baseEmail || !baseEmail.includes('@')) return '';
     const [localPart, domain] = baseEmail.split('@');
@@ -140,15 +139,15 @@ export const ManageTeams = () => {
                             ← Retour
                         </Link>
                         <button onClick={() => setIsImportModalOpen(true)} className="btn-secondary">
-                            📥 Importer Excel
+                            Importer excel
                         </button>
                         {teams.length > 0 && (
                             <>
                                 <button onClick={() => exportTeamsToExcel(teams)} className="btn-success">
-                                    📤 Exporter Excel
+                                    Exporter excel
                                 </button>
                                 <button onClick={handleRandomize} className="btn-primary">
-                                    🎲 Tour de passage
+                                    Tour de passage
                                 </button>
                             </>
                         )}
@@ -178,16 +177,16 @@ export const ManageTeams = () => {
                                         <div className="flex-1 space-y-2">
                                             <h3 className="heading-3 text-2xl mb-2">{team.name}</h3>
                                             <p className="text-sm text-indigo-400 font-mono">
-                                                📋 Plateforme: {platformName}
+                                                Plateforme: {platformName}
                                             </p>
                                             {team.generatedEmail && (
                                                 <p className="text-sm text-emerald-400 font-mono">
-                                                    📧 Email: {team.generatedEmail}
+                                                    Email: {team.generatedEmail}
                                                 </p>
                                             )}
                                             {team.passageOrder && (
                                                 <p className="text-base text-amber-400 font-bold">
-                                                    🎯 Passage #{team.passageOrder} {team.passageTime && `à ${team.passageTime}`}
+                                                    Passage #{team.passageOrder} {team.passageTime && `à ${team.passageTime}`}
                                                 </p>
                                             )}
                                             <div className="flex gap-3 items-center mt-4">

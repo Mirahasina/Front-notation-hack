@@ -49,7 +49,7 @@ export const EventDashboard = () => {
                     <Link to="/admin/events" className="btn-secondary">← Retour</Link>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 justify-items-center">
                     <div className="card text-center py-10 px-6 hover:-translate-y-2 transition-transform">
                         <div className="text-5xl font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
                             {juries.length}
@@ -68,20 +68,13 @@ export const EventDashboard = () => {
                         </div>
                         <div className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-2">Critères</div>
                     </div>
-                    <div className="card text-center py-10 px-6 hover:-translate-y-2 transition-transform">
-                        <div className="text-4xl mb-4">{allScored ? '✅' : '⏳'}</div>
-                        <div className="text-3xl font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-1">
-                            {allScored ? 'Fait' : 'En cours'}
-                        </div>
-                        <div className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-2">Statut</div>
-                    </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 lg:gap-10">
                     <Link to="/admin/juries" className="card group hover:-translate-y-2 hover:border-indigo-500/50 p-8">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="heading-3 flex items-center gap-3">
-                                <span className="text-3xl">👥</span> Gestion des Jurys
+                                <span className="text-3xl"></span> Gestion des jurys
                             </h3>
                             <span className="badge badge-primary scale-110">{juries.length}</span>
                         </div>
@@ -91,7 +84,7 @@ export const EventDashboard = () => {
                     <Link to="/admin/criteria" className="card group hover:-translate-y-2 hover:border-purple-500/50 p-8">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="heading-3 flex items-center gap-3">
-                                <span className="text-3xl">📋</span> Gestion des Critères
+                                <span className="text-3xl"></span> Gestion des critères
                             </h3>
                             <span className="badge badge-primary scale-110">{criteria.length}</span>
                         </div>
@@ -101,7 +94,7 @@ export const EventDashboard = () => {
                     <Link to="/admin/teams" className="card group hover:-translate-y-2 hover:border-emerald-500/50 p-8">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="heading-3 flex items-center gap-3">
-                                <span className="text-3xl">🚀</span> Gestion des Projets
+                                <span className="text-3xl"></span> Gestion des projets
                             </h3>
                             <span className="badge badge-primary scale-110">{teams.length}</span>
                         </div>
@@ -111,7 +104,7 @@ export const EventDashboard = () => {
                     <a href={`/results/${currentEventId}`} target="_blank" rel="noopener noreferrer" className="card group hover:-translate-y-2 hover:border-amber-500/50 p-8">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="heading-3 flex items-center gap-3">
-                                <span className="text-3xl">📊</span> Résultats Publics
+                                <span className="text-3xl"></span> Résultats publics
                             </h3>
                             {allScored && <span className="badge badge-success scale-110">Prêt</span>}
                         </div>
@@ -121,7 +114,7 @@ export const EventDashboard = () => {
 
                 {juries.length > 0 && teams.length > 0 && (
                     <div className="mt-16">
-                        <h2 className="heading-2 mb-8">Progression des Jurys</h2>
+                        <h2 className="heading-2 mb-8">Progression des jurys</h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {juries.map(jury => {
                                 const progress = getJuryProgress(jury.id, teams, teamScores);

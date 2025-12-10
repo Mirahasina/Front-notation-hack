@@ -28,10 +28,10 @@ export interface Team {
     id: string;
     eventId: string;
     name: string;
-    email?: string; // Email de base fourni par l'admin
-    generatedEmail?: string; // email+NomProjet_Team{n}@domain.com
-    password?: string; // Mot de passe aléatoire généré
-    hasLoggedIn?: boolean; // true après première connexion
+    email?: string; 
+    generatedEmail?: string;
+    password?: string;
+    hasLoggedIn?: boolean;
     passageOrder?: number;
     passageTime?: string;
     importedFrom?: 'manual' | 'excel';

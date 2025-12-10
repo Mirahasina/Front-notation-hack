@@ -58,7 +58,7 @@ export const ManageJuries = () => {
             <div className="container page-content">
                 <div className="flex justify-between items-center mb-xl">
                     <div>
-                        <h1>Gestion des Jurys</h1>
+                        <h1>Gestion des jurys</h1>
                         <p className="text-muted">Événement: {currentEvent.name}</p>
                     </div>
                     <div className="flex gap-md">
@@ -66,7 +66,7 @@ export const ManageJuries = () => {
                             ← Retour
                         </Link>
                         <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-                            + Nouveau Jury
+                            + Nouveau jury
                         </button>
                     </div>
                 </div>
@@ -74,7 +74,7 @@ export const ManageJuries = () => {
                 {juries.length === 0 ? (
                     <div className="card text-center">
                         <h3>Aucun jury enregistré</h3>
-                        <p className="text-muted">Cliquez sur "Nouveau Jury" pour commencer</p>
+                        <p className="text-muted">Cliquez sur "Nouveau jury" pour commencer</p>
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gap: 'var(--spacing-md)' }}>
