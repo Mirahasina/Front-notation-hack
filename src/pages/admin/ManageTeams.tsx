@@ -17,7 +17,7 @@ const generatePlatformEmail = (baseEmail: string, teamName: string, index: numbe
 };
 
 export const ManageTeams = () => {
-    const { teams, addTeam, updateTeam, deleteTeam, users, teamScores, currentEventId } = useData();
+    const { teams, addTeam, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export const ManageTeams = () => {
     };
 
     const handleRandomize = () => {
-        const ordered = assignPassageOrder(teams, '09h00', 15);
+        const ordered = assignPassageOrder(teams, '08h00', 8);
         ordered.forEach(team => {
             updateTeam(team.id, {
                 passageOrder: team.passageOrder,
@@ -120,6 +120,12 @@ export const ManageTeams = () => {
         }
     };
 
+    const handleDeleteAll = () => {
+        if (confirm('Êtes-vous sûr de vouloir supprimer TOUTES les équipes ? Cette action est irréversible.')) {
+            deleteAllTeams();
+        }
+    };
+
     const getTeamProgress = (teamId: string) => {
         const juries = users.filter(u => u.role === 'jury');
         if (juries.length === 0) return { scored: 0, total: 0 };
@@ -147,6 +153,9 @@ export const ManageTeams = () => {
                             <>
                                 <button onClick={() => exportTeamsToExcel(teams)} className="btn-success">
                                     <span className="text-lg"></span> Exporter
+                                </button>
+                                <button onClick={handleDeleteAll} className="btn-danger">
+                                    <span className="text-lg"></span> Tout effacer
                                 </button>
                                 <button onClick={handleRandomize} className="btn-primary">
                                     <span className="text-lg"></span> Tirage au sort

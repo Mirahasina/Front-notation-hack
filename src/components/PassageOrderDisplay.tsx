@@ -18,8 +18,8 @@ export const PassageOrderDisplay = ({ teams, onClear }: PassageOrderDisplayProps
             <div className="card">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="flex items-center gap-2 text-xl font-bold">
-                        <span className="text-2xl">📊</span>
-                        Ordre de Passage
+                        <span className="text-2xl"></span>
+                        Ordre de passage
                     </h3>
                     <button onClick={onClear} className="btn-secondary text-sm">
                         Réinitialiser
@@ -39,14 +39,14 @@ export const PassageOrderDisplay = ({ teams, onClear }: PassageOrderDisplayProps
                             <div
                                 key={team.id}
                                 className={`flex items-center gap-4 p-4 rounded-xl border transition-all hover:-translate-x-1 ${isTop3
-                                        ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/30'
-                                        : 'bg-slate-800/50 border-slate-700/50'
+                                    ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/30'
+                                    : 'bg-slate-800/50 border-slate-700/50'
                                     }`}
                             >
                                 <div
                                     className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${team.passageOrder && gradients[team.passageOrder]
-                                            ? `bg-gradient-to-br ${gradients[team.passageOrder]}`
-                                            : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                                        ? `bg-gradient-to-br ${gradients[team.passageOrder]}`
+                                        : 'bg-gradient-to-br from-indigo-500 to-purple-600'
                                         }`}
                                 >
                                     {team.passageOrder}

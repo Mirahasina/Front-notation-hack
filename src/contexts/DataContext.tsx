@@ -27,6 +27,7 @@ interface DataContextType {
     addTeam: (team: Omit<Team, 'id'>) => Team;
     updateTeam: (id: string, team: Partial<Team>) => void;
     deleteTeam: (id: string) => void;
+    deleteAllTeams: () => void;
 
     // Criteria
     addCriterion: (criterion: Omit<Criterion, 'id'>) => Criterion;
@@ -176,6 +177,21 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         }));
     };
 
+    const deleteAllTeams = () => {
+        if (!currentEventId) return;
+
+        setData(prev => {
+            const teamsToDelete = prev.teams.filter(t => t.eventId === currentEventId);
+            const teamIdsToDelete = new Set(teamsToDelete.map(t => t.id));
+
+            return {
+                ...prev,
+                teams: prev.teams.filter(t => t.eventId !== currentEventId),
+                teamScores: prev.teamScores.filter(ts => !teamIdsToDelete.has(ts.teamId))
+            };
+        });
+    };
+
     // Criteria
     const addCriterion = (criterion: Omit<Criterion, 'id'>): Criterion => {
         const newCriterion: Criterion = {
@@ -240,6 +256,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         addTeam,
         updateTeam,
         deleteTeam,
+        deleteAllTeams,
         addCriterion,
         updateCriterion,
         deleteCriterion,

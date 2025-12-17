@@ -112,7 +112,7 @@ export const TeamDashboard = () => {
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-purple-400">→</span>
-                            Créez votre repository GitHub avec le nom <code className="px-2 py-1 bg-purple-500/20 rounded text-purple-300 font-mono text-sm">gitea.insi.local/manu/instruction-hackathon</code>
+                            Créez votre repository Gitea en suivant les instructions sur : <code className="px-2 py-1 bg-purple-500/20 rounded text-purple-300 font-mono text-sm">gitea.insi.local/manu/instruction-hackathon</code>
                         </li>
                         {currentTeam.passageOrder && (
                             <li className="flex items-start gap-3">
