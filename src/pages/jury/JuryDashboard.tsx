@@ -20,7 +20,6 @@ export const JuryDashboard = () => {
                 <div className="mb-8">
                     <h1 className="flex items-center gap-3">
                         <span className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
-                            ⚖️
                         </span>
                         Tableau de Bord Jury
                     </h1>
@@ -29,7 +28,7 @@ export const JuryDashboard = () => {
 
                 {teams.length === 0 ? (
                     <div className="card text-center py-16">
-                        <div className="text-6xl mb-4">⏳</div>
+                        <div className="text-6xl mb-4"></div>
                         <h3 className="text-xl mb-2">Aucune équipe à noter</h3>
                         <p className="text-slate-400">Les équipes seront ajoutées par l'administrateur</p>
                     </div>
@@ -54,7 +53,6 @@ export const JuryDashboard = () => {
                         {/* Completion Message */}
                         {isComplete && (
                             <div className="card mb-8 text-center bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30">
-                                <div className="text-5xl mb-4">🎉</div>
                                 <h2 className="text-2xl font-bold mb-2">Félicitations !</h2>
                                 <p className="text-slate-400">
                                     Vous avez noté toutes les équipes. Merci pour votre contribution !
@@ -74,8 +72,8 @@ export const JuryDashboard = () => {
                                     <div
                                         key={team.id}
                                         className={`card transition-all hover:-translate-y-1 ${isScored
-                                                ? 'border-emerald-500/30 bg-emerald-500/5'
-                                                : 'hover:border-indigo-500/50'
+                                            ? 'border-emerald-500/30 bg-emerald-500/5'
+                                            : 'hover:border-indigo-500/50'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start mb-4">
@@ -86,8 +84,8 @@ export const JuryDashboard = () => {
                                         <Link
                                             to={`/jury/score/${team.id}`}
                                             className={`block w-full text-center py-3 rounded-xl font-semibold transition-all ${isScored
-                                                    ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                                                    : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:-translate-y-0.5'
+                                                ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                                : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:-translate-y-0.5'
                                                 }`}
                                         >
                                             {isScored ? 'Voir les notes' : 'Noter →'}

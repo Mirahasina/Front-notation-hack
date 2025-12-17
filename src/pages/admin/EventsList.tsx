@@ -121,7 +121,7 @@ export const EventsList = () => {
                                     </div>
                                     <div className="flex gap-3">
                                         <button onClick={() => handleManageEvent(event)} className="btn-primary">
-                                            📊 Gérer
+                                            Gérer
                                         </button>
                                         <button onClick={() => handleEdit(event)} className="btn-secondary">
                                             Modifier
@@ -140,7 +140,7 @@ export const EventsList = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={resetForm}
-                title={editingId ? 'Modifier l\'Événement' : 'Nouvel Événement'}
+                title={editingId ? 'Modifier l\'événement' : 'Nouvel événement'}
             >
                 <div className="space-y-5">
                     <div className="form-group">
@@ -169,14 +169,14 @@ export const EventsList = () => {
                         />
                     </div>
 
-                    <div className="form-group">
+                    {/* <div className="form-group">
                         <label className="form-label">Statut</label>
                         <select value={status} onChange={e => setStatus(e.target.value as Event['status'])}>
                             <option value="upcoming">À venir</option>
                             <option value="ongoing">En cours</option>
                             <option value="completed">Terminé</option>
                         </select>
-                    </div>
+                    </div> */}
 
                     <div className="flex gap-3 justify-end pt-4 border-t border-slate-800">
                         <button onClick={resetForm} className="btn-secondary">Annuler</button>

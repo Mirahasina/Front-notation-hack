@@ -3,6 +3,7 @@ import { Navbar } from '../../components/Navbar';
 import { Modal } from '../../components/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
+import './JuryScoring.css';
 
 export const JuryScoring = () => {
     const { user } = useAuth();
@@ -92,37 +93,35 @@ export const JuryScoring = () => {
 
     if (!user || teams.length === 0) {
         return (
-            <>
+            <div className="jury-scoring-page">
                 <Navbar />
-                <div className="container page-content text-center">
-                    <h1>Aucune équipe disponible</h1>
-                    <p className="text-muted">Contactez l'administrateur</p>
+                <div className="state-container">
+                    <div className="state-card">
+                        <span className="state-icon"></span>
+                        <h1>Aucune équipe disponible</h1>
+                        <p className="text-slate-400 mt-4">Contactez l'administrateur</p>
+                    </div>
                 </div>
-            </>
+            </div>
         );
     }
 
     if (allCompleted) {
         return (
-            <>
+            <div className="jury-scoring-page">
                 <Navbar />
-                <div className="container page-content text-center">
-                    <div className="card" style={{
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        borderColor: 'var(--color-success)',
-                        maxWidth: '600px',
-                        margin: '0 auto'
-                    }}>
-                        <h1>🎉 Félicitations !</h1>
-                        <p style={{ fontSize: '1.25rem', marginTop: 'var(--spacing-lg)' }}>
+                <div className="state-container">
+                    <div className="state-card" style={{ borderColor: 'var(--color-success)', background: 'rgba(16, 185, 129, 0.05)' }}>
+                        <h1 className="text-emerald-400">Félicitations !</h1>
+                        <p className="text-xl mt-4 text-white">
                             Vous avez noté toutes les équipes.
                         </p>
-                        <p className="text-muted">
+                        <p className="text-slate-400 mt-2">
                             Merci pour votre contribution !
                         </p>
                     </div>
                 </div>
-            </>
+            </div>
         );
     }
 
@@ -132,66 +131,71 @@ export const JuryScoring = () => {
     const maxTotal = criteria.reduce((sum, c) => sum + c.maxScore, 0);
 
     return (
-        <>
+        <div className="jury-scoring-page">
             <Navbar />
-            <div className="container page-content">
+            <div className="scoring-container">
                 <div className="scoring-header">
-                    <h1>Notation - Équipe {currentTeamIndex + 1}/{teams.length}</h1>
-                    <div className="progress-indicator">
+                    <h1 className="scoring-title">Notation - Équipe {currentTeamIndex + 1}/{teams.length}</h1>
+                    <div className="scoring-progress-indicator">
                         {teams.map((_, index) => (
                             <div
                                 key={index}
-                                className={`progress-dot ${index < currentTeamIndex ? 'completed' : index === currentTeamIndex ? 'current' : ''}`}
+                                className={`scoring-dot ${index < currentTeamIndex ? 'completed' : index === currentTeamIndex ? 'current' : ''}`}
                             />
                         ))}
                     </div>
                 </div>
 
-                <div className="scoring-table-container card">
+                <div className="scoring-card">
                     <div className="team-name-display">
                         <h2>{currentTeam.name}</h2>
                     </div>
 
-                    <table className="scoring-table">
-                        <thead>
-                            <tr>
-                                <th>Critère</th>
-                                <th>Note Max</th>
-                                <th>Votre Note</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {criteria.map(criterion => (
-                                <tr key={criterion.id}>
-                                    <td className="criterion-name-cell">{criterion.name}</td>
-                                    <td className="max-score-cell">{criterion.maxScore} pts</td>
-                                    <td className="score-input-cell">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max={criterion.maxScore}
-                                            value={scores[criterion.id] || 0}
-                                            onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
-                                            className="score-input-number"
-                                        />
-                                    </td>
+                    <div className="scoring-table-wrapper">
+                        <table className="scoring-table">
+                            <thead>
+                                <tr>
+                                    <th>Critère</th>
+                                    <th>Note Max</th>
+                                    <th>Votre Note</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="total-row">
-                                <td><strong>TOTAL</strong></td>
-                                <td>{maxTotal} pts</td>
-                                <td>
-                                    <strong className="total-score-display">{total} pts</strong>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {criteria.map(criterion => (
+                                    <tr key={criterion.id}>
+                                        <td>
+                                            <span className="criterion-name">{criterion.name}</span>
+                                        </td>
+                                        <td>
+                                            / {criterion.maxScore}
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max={criterion.maxScore}
+                                                value={scores[criterion.id] || 0}
+                                                onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
+                                                className="score-input"
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="total-row-display">
+                        <span className="total-label">NOTE TOTALE</span>
+                        <div className="total-value-group">
+                            <span className="total-score">{total}</span>
+                            <span className="total-max">/ {maxTotal} points</span>
+                        </div>
+                    </div>
 
                     <div className="scoring-actions">
-                        <button onClick={handleSubmit} className="btn-success btn-large">
-                            ✓ Valider et Passer à l'Équipe Suivante
+                        <button onClick={handleSubmit} className="btn-large-success">
+                            Valider et Passer à la Suivante
                         </button>
                     </div>
                 </div>
@@ -200,36 +204,38 @@ export const JuryScoring = () => {
             <Modal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
-                title="Confirmer la NotationTitle"
+                title="Confirmer la Notation"
             >
-                <div className="mb-lg">
-                    <p>
+                <div className="mb-8">
+                    <p className="text-lg">
                         Vous êtes sur le point de valider vos notes pour <strong>{currentTeam.name}</strong>.
                     </p>
-                    <div className="card mt-md" style={{ background: 'var(--color-bg-tertiary)' }}>
-                        <h4>Récapitulatif:</h4>
-                        <ul style={{ marginTop: 'var(--spacing-md)' }}>
+
+                    <div className="bg-slate-800/50 p-6 rounded-xl mt-6 border border-slate-700/50">
+                        <h4 className="font-bold text-slate-300 mb-4 uppercase text-xs tracking-wider">Récapitulatif</h4>
+                        <ul className="recap-list">
                             {criteria.map(criterion => (
-                                <li key={criterion.id}>
-                                    {criterion.name}: <strong>{scores[criterion.id] || 0}</strong> / {criterion.maxScore} pts
+                                <li key={criterion.id} className="recap-item">
+                                    <span className="text-slate-300">{criterion.name}</span>
+                                    <span><strong>{scores[criterion.id] || 0}</strong> <span className="text-slate-500">/ {criterion.maxScore}</span></span>
                                 </li>
                             ))}
                         </ul>
-                        <div className="mt-md" style={{
-                            borderTop: '1px solid var(--color-border)',
-                            paddingTop: 'var(--spacing-md)',
-                            fontSize: '1.25rem',
-                            fontWeight: 'bold'
-                        }}>
-                            Total: {total} / {maxTotal} pts
+                        <div className="recap-total">
+                            <span>Total</span>
+                            <span>{total} / {maxTotal} pts</span>
                         </div>
                     </div>
-                    <p className="text-muted mt-md" style={{ fontSize: '0.875rem' }}>
-                        ⚠️ Une fois validées, ces notes seront verrouillées et vous passerez automatiquement à l'équipe suivante.
-                    </p>
+
+                    <div className="flex items-center gap-3 mt-6 text-amber-300/80 bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
+                        <span className="text-2xl"></span>
+                        <p className="text-sm">
+                            Une fois validées, ces notes seront verrouillées et vous passerez automatiquement à l'équipe suivante.
+                        </p>
+                    </div>
                 </div>
 
-                <div className="flex gap-md justify-end">
+                <div className="flex gap-4 justify-end">
                     <button onClick={() => setIsConfirmModalOpen(false)} className="btn-secondary">
                         Annuler
                     </button>
@@ -238,6 +244,6 @@ export const JuryScoring = () => {
                     </button>
                 </div>
             </Modal>
-        </>
+        </div>
     );
 };

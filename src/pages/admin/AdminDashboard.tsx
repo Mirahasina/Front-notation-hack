@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../../components/Navbar';
 import { useData } from '../../contexts/DataContext';
 import { getJuryProgress, areAllTeamsScored } from '../../utils/calculations';
+import { ChangePasswordModal } from '../../components/admin/ChangePasswordModal';
 
 export const AdminDashboard = () => {
     const { users, teams, criteria, teamScores } = useData();
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     const juries = users.filter(u => u.role === 'jury');
     const allScored = areAllTeamsScored(teams, juries, teamScores);
@@ -13,8 +16,18 @@ export const AdminDashboard = () => {
         <>
             <Navbar />
             <div className="container page-content">
-                <h1>Dashboard  Administrateur</h1>
-                <p className="text-muted">Gérez les jurys, critères, équipes et consultez les résultats</p>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                    <div>
+                        <h1 className="heading-1 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Dashboard Administrateur</h1>
+                        <p className="text-body text-lg">Gérez les jurys, critères, équipes et consultez les résultats</p>
+                    </div>
+                    <button
+                        onClick={() => setIsPasswordModalOpen(true)}
+                        className="btn-secondary text-sm"
+                    >
+                        🔐 Changer mot de passe
+                    </button>
+                </div>
 
                 <div className="stats-grid">
                     <div className="stat-card card">
@@ -38,14 +51,13 @@ export const AdminDashboard = () => {
                     <div className="stat-card card">
                         <div className="stat-icon">{allScored ? '✅' : '⏳'}</div>
                         <div className="stat-value">{allScored ? 'Complété' : 'En cours'}</div>
-                        <div className="stat-label">Statut</div>
                     </div>
                 </div>
 
                 <div className="admin-sections">
-                    <Link to="/admin/juries" className="admin-section-card card">
+                    <Link to="/admin/juries" className="admin-section-card card group">
                         <div className="section-header">
-                            <h3>Gestion des jurys</h3>
+                            <h3 className="heading-3 group-hover:text-indigo-400 transition-colors">Gestion des jurys</h3>
                             <span className="badge badge-primary">{juries.length}</span>
                         </div>
                         <p className="text-muted">
@@ -53,9 +65,9 @@ export const AdminDashboard = () => {
                         </p>
                     </Link>
 
-                    <Link to="/admin/criteria" className="admin-section-card card">
+                    <Link to="/admin/criteria" className="admin-section-card card group">
                         <div className="section-header">
-                            <h3>Gestion des critères</h3>
+                            <h3 className="heading-3 group-hover:text-indigo-400 transition-colors">Gestion des critères</h3>
                             <span className="badge badge-primary">{criteria.length}</span>
                         </div>
                         <p className="text-muted">
@@ -63,9 +75,9 @@ export const AdminDashboard = () => {
                         </p>
                     </Link>
 
-                    <Link to="/admin/teams" className="admin-section-card card">
+                    <Link to="/admin/teams" className="admin-section-card card group">
                         <div className="section-header">
-                            <h3>Gestion des équipes</h3>
+                            <h3 className="heading-3 group-hover:text-indigo-400 transition-colors">Gestion des équipes</h3>
                             <span className="badge badge-primary">{teams.length}</span>
                         </div>
                         <p className="text-muted">
@@ -73,9 +85,9 @@ export const AdminDashboard = () => {
                         </p>
                     </Link>
 
-                    <a href="/results" target="_blank" rel="noopener noreferrer" className="admin-section-card card">
+                    <a href="/results" target="_blank" rel="noopener noreferrer" className="admin-section-card card group">
                         <div className="section-header">
-                            <h3>🏆 Résultats publics</h3>
+                            <h3 className="heading-3 group-hover:text-emerald-400 transition-colors">Résultats publics</h3>
                             {allScored && <span className="badge badge-success">Prêt</span>}
                         </div>
                         <p className="text-muted">
@@ -87,16 +99,16 @@ export const AdminDashboard = () => {
 
             {juries.length > 0 && teams.length > 0 && (
                 <div className="jury-progress-section">
-                    <h2>Progression des Jurys</h2>
+                    <h2 className="heading-2 mb-6">Progression des Jurys</h2>
                     <div className="jury-progress-list">
                         {juries.map(jury => {
                             const progress = getJuryProgress(jury.id, teams, teamScores);
                             return (
                                 <div key={jury.id} className="card progress-card">
-                                    <div className="flex justify-between items-center mb-md">
+                                    <div className="flex justify-between items-center mb-4">
                                         <div>
-                                            <h4>{jury.username}</h4>
-                                            <p className="text-muted">{progress.scored} / {progress.total} équipes notées</p>
+                                            <h4 className="heading-4">{jury.username}</h4>
+                                            <p className="text-muted text-sm">{progress.scored} / {progress.total} équipes notées</p>
                                         </div>
                                         <span className="badge badge-primary">{progress.percentage}%</span>
                                     </div>
@@ -112,6 +124,11 @@ export const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+
+            <ChangePasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+            />
         </>
     );
 };

@@ -1,0 +1,214 @@
+/* ManageTeams.css */
+
+.manage-teams-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    color: #f8fafc;
+}
+
+.teams-container {
+    max-width: 95rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .teams-container {
+        padding: 5rem 3.5rem;
+    }
+}
+
+.teams-header-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+    .teams-header-section {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.teams-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.025em;
+}
+
+.teams-subtitle {
+    font-size: 1.125rem;
+    color: #cbd5e1;
+}
+
+.teams-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.empty-state-card {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px dashed rgba(99, 102, 241, 0.3);
+    border-radius: 1.5rem;
+    padding: 4rem;
+    text-align: center;
+}
+
+.teams-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .teams-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1280px) {
+    .teams-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.team-card {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.team-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.team-card:hover::before {
+    opacity: 1;
+}
+
+.team-card-content {
+    position: relative;
+    z-index: 1;
+}
+
+.team-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.team-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.team-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.team-platform {
+    color: #818cf8;
+}
+
+.team-email {
+    color: #34d399;
+}
+
+.team-passage {
+    color: #fbbf24;
+    font-family: sans-serif;
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.team-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.team-progress-wrapper {
+    margin-top: 1.5rem;
+    height: 0.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.team-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+    border-radius: 9999px;
+    transition: width 1s ease-out;
+}
+
+.team-actions-footer {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-edit {
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+}
+
+.btn-edit:hover {
+    background: rgba(99, 102, 241, 0.2);
+    color: white;
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+}
+
+.btn-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: white;
+}

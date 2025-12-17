@@ -68,19 +68,31 @@ export const parseExcelPreview = (rawData: any[][]): ExcelPreview => {
  * Extrait les noms d'équipes depuis une colonne spécifique
  */
 export const extractTeamsFromColumn = (
-    preview: ExcelPreview,
+    rawData: any[][],
+    headers: string[],
     nameColumn: string,
-    descriptionColumn?: string
-): Array<{ name: string; description?: string }> => {
-    const teams: Array<{ name: string; description?: string }> = [];
+    descriptionColumn?: string,
+    emailColumn?: string
+): Array<{ name: string; description?: string; email?: string }> => {
+    const teams: Array<{ name: string; description?: string; email?: string }> = [];
 
-    // On utilise toutes les données, pas juste l'aperçu
-    preview.rows.forEach(row => {
-        const name = row[nameColumn];
+    // Trouver les index des colonnes
+    const nameIndex = headers.indexOf(nameColumn);
+    const descIndex = descriptionColumn ? headers.indexOf(descriptionColumn) : -1;
+    const emailIndex = emailColumn ? headers.indexOf(emailColumn) : -1;
+
+    if (nameIndex === -1) return [];
+
+    // Ignorer la première ligne (headers)
+    const dataRows = rawData.slice(1);
+
+    dataRows.forEach(row => {
+        const name = row[nameIndex];
         if (name && String(name).trim()) {
             teams.push({
                 name: String(name).trim(),
-                description: descriptionColumn ? String(row[descriptionColumn] || '').trim() : undefined
+                description: descIndex !== -1 ? String(row[descIndex] || '').trim() : undefined,
+                email: emailIndex !== -1 ? String(row[emailIndex] || '').trim() : undefined
             });
         }
     });

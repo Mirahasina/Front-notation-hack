@@ -6,7 +6,7 @@ const DEFAULT_EVENT_ID = 'event-juryhack-2025';
 const defaultAdmin: User = {
     id: 'admin-1',
     username: 'admin',
-    password: 'admin123',
+    password: 'admin_RISE@2345',
     role: 'admin'
 };
 
@@ -71,7 +71,6 @@ export const loadData = (): AppData => {
             const parsed = JSON.parse(stored);
             const migrated = migrateData(parsed);
 
-            // Save migrated data back
             if (!parsed.events) {
                 saveData(migrated);
             }

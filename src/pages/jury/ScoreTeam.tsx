@@ -5,6 +5,7 @@ import { Modal } from '../../components/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import { DEFAULT_EVENT_ID } from '../../utils/storage';
+import './JuryScoring.css';
 
 export const ScoreTeam = () => {
     const { teamId } = useParams<{ teamId: string }>();
@@ -34,15 +35,18 @@ export const ScoreTeam = () => {
 
     if (!team || !user) {
         return (
-            <>
+            <div className="jury-scoring-page">
                 <Navbar />
-                <div className="container page-content text-center">
-                    <h1>Équipe non trouvée</h1>
-                    <Link to="/jury/dashboard" className="btn-primary mt-lg">
-                        Retour au Dashboard
-                    </Link>
+                <div className="state-container">
+                    <div className="state-card">
+                        <span className="state-icon">❌</span>
+                        <h1>Équipe non trouvée</h1>
+                        <Link to="/jury/dashboard" className="btn-primary mt-8 inline-block">
+                            Retour au Dashboard
+                        </Link>
+                    </div>
                 </div>
-            </>
+            </div>
         );
     }
 
@@ -86,41 +90,40 @@ export const ScoreTeam = () => {
     const maxTotal = criteria.reduce((sum, c) => sum + c.maxScore, 0);
 
     return (
-        <>
+        <div className="jury-scoring-page">
             <Navbar />
-            <div className="container page-content">
-                <Link to="/jury/dashboard" className="btn-secondary mb-lg">
+            <div className="scoring-container">
+                <Link to="/jury/dashboard" className="btn-secondary mb-8 inline-flex items-center gap-2">
                     ← Retour au Dashboard
                 </Link>
 
-                <div className="score-header card mb-xl">
-                    <h1>{team.name}</h1>
-                    {isLocked && (
-                        <div className="mt-md">
-                            <span className="badge badge-success">✓ Notes verrouillées</span>
-                            <p className="text-muted mt-sm" style={{ fontSize: '0.875rem' }}>
-                                Vous avez déjà noté cette équipe. Les notes ne peuvent plus être modifiées.
-                            </p>
-                        </div>
-                    )}
+                <div className="scoring-card mb-8">
+                    <div className="scoring-header mb-0">
+                        <h1 className="scoring-title mb-2">{team.name}</h1>
+                        {isLocked && (
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300">
+                                <span>✓ Notes verrouillées</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {criteria.length === 0 ? (
-                    <div className="card text-center">
+                    <div className="state-card">
                         <h3>Aucun critère défini</h3>
-                        <p className="text-muted">Contactez l'administrateur pour ajouter des critères</p>
+                        <p className="text-slate-400">Contactez l'administrateur pour ajouter des critères</p>
                     </div>
                 ) : (
                     <>
-                        <div className="scoring-grid">
+                        <div className="scoring-grid-layout">
                             {criteria.map(criterion => (
-                                <div key={criterion.id} className="criterion-card card">
-                                    <div className="criterion-header">
-                                        <h3>{criterion.name}</h3>
-                                        <span className="criterion-max">Max: {criterion.maxScore} pts</span>
+                                <div key={criterion.id} className="criterion-card">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="criterion-name">{criterion.name}</h3>
+                                        <span className="text-slate-400 text-sm">Max: {criterion.maxScore} pts</span>
                                     </div>
 
-                                    <div className="score-input-container">
+                                    <div className="space-y-4">
                                         <input
                                             type="range"
                                             min="0"
@@ -131,51 +134,54 @@ export const ScoreTeam = () => {
                                             disabled={isLocked}
                                             className="score-slider"
                                         />
-                                        <div className="score-display">
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max={criterion.maxScore}
-                                                step="0.5"
-                                                value={scores[criterion.id] || 0}
-                                                onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
-                                                disabled={isLocked}
-                                                className="score-number-input"
-                                            />
-                                            <span className="score-unit">pts</span>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs text-slate-500">0</span>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max={criterion.maxScore}
+                                                    step="0.5"
+                                                    value={scores[criterion.id] || 0}
+                                                    onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
+                                                    disabled={isLocked}
+                                                    className="w-20 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 text-center font-bold"
+                                                />
+                                                <span className="text-slate-400">pts</span>
+                                            </div>
+                                            <span className="text-xs text-slate-500">{criterion.maxScore}</span>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="total-section card">
-                            <div className="flex justify-between items-center">
+                        <div className="scoring-card">
+                            <div className="total-row-display mb-0">
                                 <div>
-                                    <h2>Total</h2>
-                                    <p className="text-muted">Somme de tous les critères</p>
+                                    <span className="total-label block">Total Provisoire</span>
+                                    <span className="text-slate-400 text-sm">Somme de tous les critères</span>
                                 </div>
-                                <div className="total-display">
-                                    <span className="total-value">{total}</span>
-                                    <span className="total-max">/ {maxTotal} pts</span>
+                                <div className="total-value-group">
+                                    <span className="total-score">{total}</span>
+                                    <span className="total-max">/ {maxTotal} points</span>
                                 </div>
                             </div>
-                        </div>
 
-                        {!isLocked && (
-                            <div className="text-center mt-xl">
-                                <button
-                                    onClick={handleSubmit}
-                                    className="btn-success"
-                                    style={{ fontSize: '1.125rem', padding: '1rem 2.5rem' }}
-                                >
-                                    ✓ Valider les Notes
-                                </button>
-                                <p className="text-muted mt-md">
-                                    ⚠️ Attention: Une fois validées, les notes ne pourront plus être modifiées
-                                </p>
-                            </div>
-                        )}
+                            {!isLocked && (
+                                <div className="scoring-actions mt-8">
+                                    <button
+                                        onClick={handleSubmit}
+                                        className="btn-large-success"
+                                    >
+                                        ✓ Valider les Notes
+                                    </button>
+                                    <p className="text-slate-500 mt-4 text-sm">
+                                        ⚠️ Attention: Une fois validées, les notes ne pourront plus être modifiées
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </>
                 )}
             </div>
@@ -185,34 +191,36 @@ export const ScoreTeam = () => {
                 onClose={() => setIsModalOpen(false)}
                 title="Confirmer la Validation"
             >
-                <div className="mb-lg">
-                    <p>
+                <div className="mb-8">
+                    <p className="text-lg">
                         Vous êtes sur le point de valider vos notes pour <strong>{team.name}</strong>.
                     </p>
-                    <div className="card mt-md" style={{ background: 'var(--color-bg-tertiary)' }}>
-                        <h4>Récapitulatif:</h4>
-                        <ul style={{ marginTop: 'var(--spacing-md)' }}>
+
+                    <div className="bg-slate-800/50 p-6 rounded-xl mt-6 border border-slate-700/50">
+                        <h4 className="font-bold text-slate-300 mb-4 uppercase text-xs tracking-wider">Récapitulatif</h4>
+                        <ul className="recap-list">
                             {criteria.map(criterion => (
-                                <li key={criterion.id}>
-                                    {criterion.name}: <strong>{scores[criterion.id] || 0}</strong> / {criterion.maxScore} pts
+                                <li key={criterion.id} className="recap-item">
+                                    <span className="text-slate-300">{criterion.name}</span>
+                                    <span><strong>{scores[criterion.id] || 0}</strong> <span className="text-slate-500">/ {criterion.maxScore}</span></span>
                                 </li>
                             ))}
                         </ul>
-                        <div className="mt-md" style={{
-                            borderTop: '1px solid var(--color-border)',
-                            paddingTop: 'var(--spacing-md)',
-                            fontSize: '1.25rem',
-                            fontWeight: 'bold'
-                        }}>
-                            Total: {total} / {maxTotal} pts
+                        <div className="recap-total">
+                            <span>Total</span>
+                            <span>{total} / {maxTotal} pts</span>
                         </div>
                     </div>
-                    <p className="text-muted mt-md" style={{ fontSize: '0.875rem' }}>
-                        ⚠️ Une fois validées, ces notes seront verrouillées et vous ne pourrez plus les modifier.
-                    </p>
+
+                    <div className="flex items-center gap-3 mt-6 text-amber-300/80 bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
+                        <span className="text-2xl">⚠️</span>
+                        <p className="text-sm">
+                            Une fois validées, ces notes seront verrouillées et vous ne pourrez plus les modifier.
+                        </p>
+                    </div>
                 </div>
 
-                <div className="flex gap-md justify-end">
+                <div className="flex gap-4 justify-end">
                     <button onClick={() => setIsModalOpen(false)} className="btn-secondary">
                         Annuler
                     </button>
@@ -221,6 +229,6 @@ export const ScoreTeam = () => {
                     </button>
                 </div>
             </Modal>
-        </>
+        </div>
     );
 };

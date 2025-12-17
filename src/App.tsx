@@ -14,11 +14,7 @@ function App() {
   const { isAuthenticated, isAdmin, isTeam } = useAuth();
   const location = useLocation();
 
-  // Si on est sur /login et authentifié, rediriger vers le dashboard approprié
-  // SAUF si on vient de se connecter (pour afficher le modal de mot de passe)
   if (location.pathname === '/login') {
-    // Si authentifié, ne montrer login que si c'est une première connexion (state spécial)
-    // Sinon, rediriger
     if (isAuthenticated && !location.state?.showPasswordModal) {
       if (isTeam) {
         return <Navigate to="/team/dashboard" replace />;
@@ -46,7 +42,6 @@ function App() {
     );
   }
 
-  // Routes pour les équipes
   if (isTeam) {
     return (
       <Routes>

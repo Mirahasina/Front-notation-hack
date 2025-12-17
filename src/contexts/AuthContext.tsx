@@ -13,11 +13,24 @@ const generateRandomPassword = (): string => {
     return password;
 };
 
+export interface LoginResult {
+    success: boolean;
+    role?: 'admin' | 'team' | 'jury';
+    error?: string;
+}
+
+export interface TeamLoginResult {
+    success: boolean;
+    isFirstLogin: boolean;
+    generatedPassword?: string;
+    error?: string;
+}
+
 interface AuthContextType {
     user: User | null;
     currentTeam: Team | null;
-    login: (username: string, password: string) => boolean;
-    loginTeam: (email: string, password: string) => { success: boolean; isFirstLogin: boolean; generatedPassword?: string };
+    login: (username: string, password: string) => LoginResult;
+    loginTeam: (email: string, password: string) => TeamLoginResult;
     logout: () => void;
     isAuthenticated: boolean;
     isAdmin: boolean;
@@ -53,7 +66,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     }, []);
 
-    const login = (username: string, password: string): boolean => {
+
+
+    const login = (username: string, password: string): LoginResult => {
         const data = loadData();
         const foundUser = data.users.find(
             u => u.username === username && u.password === password
@@ -62,13 +77,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (foundUser) {
             setUser(foundUser);
             localStorage.setItem('current_user', JSON.stringify(foundUser));
-            return true;
+            return { success: true, role: foundUser.role };
         }
 
-        return false;
+        return { success: false, error: 'Identifiants incorrects' };
     };
 
-    const loginTeam = (email: string, password: string): { success: boolean; isFirstLogin: boolean; generatedPassword?: string } => {
+    const loginTeam = (email: string, password: string): TeamLoginResult => {
         const data = loadData();
 
         // Chercher l'équipe par email généré
@@ -76,7 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (!team) {
             console.log('Team not found for email:', email);
-            return { success: false, isFirstLogin: false };
+            return { success: false, isFirstLogin: false, error: 'Équipe non trouvée' };
         }
 
         console.log('Team found:', team.name, 'hasLoggedIn:', team.hasLoggedIn, 'has password:', !!team.password);
@@ -93,45 +108,43 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             data.teams[teamIndex] = team;
             saveData(data);
 
-            // Créer un utilisateur virtuel
-            const teamUser: User = {
-                id: `team-user-${team.id}`,
-                username: team.generatedEmail || team.name,
-                password: newPassword,
-                role: 'team',
-                teamId: team.id
-            };
-
-            setUser(teamUser);
-            setCurrentTeam(team);
-            localStorage.setItem('current_user', JSON.stringify(teamUser));
-            localStorage.setItem('current_team', JSON.stringify(team));
+            // Note: On ne connecte pas encore l'utilisateur pour éviter la redirection immédiate
+            // Le Login.tsx affichera la modale, puis connectera l'utilisateur
 
             return { success: true, isFirstLogin: true, generatedPassword: newPassword };
         }
 
-        // Connexions suivantes - vérifier le mot de passe
-        if (team.password && team.password === password) {
-            console.log('Password match! Logging in...');
-            const teamUser: User = {
-                id: `team-user-${team.id}`,
-                username: team.generatedEmail || team.name,
-                password: team.password,
-                role: 'team',
-                teamId: team.id
-            };
+        // Si le mot de passe est fourni, vérifier la correspondance
+        if (password) {
+            if (team.password && team.password === password) {
+                console.log('Password match! Logging in...');
+                const teamUser: User = {
+                    id: `team-user-${team.id}`,
+                    username: team.generatedEmail || team.name,
+                    password: team.password,
+                    role: 'team',
+                    teamId: team.id
+                };
 
-            setUser(teamUser);
-            setCurrentTeam(team);
-            localStorage.setItem('current_user', JSON.stringify(teamUser));
-            localStorage.setItem('current_team', JSON.stringify(team));
+                setUser(teamUser);
+                setCurrentTeam(team);
+                localStorage.setItem('current_user', JSON.stringify(teamUser));
+                localStorage.setItem('current_team', JSON.stringify(team));
 
-            return { success: true, isFirstLogin: false };
+                return { success: true, isFirstLogin: false };
+            } else {
+                return { success: false, isFirstLogin: false, error: 'Mot de passe incorrect' };
+            }
         }
 
-        // Mot de passe incorrect ou manquant pour une équipe qui a déjà un mot de passe
+        // Cas où le mot de passe est manquant pour une équipe qui a déjà un mot de passe
+        if (team.password && !password) {
+            return { success: false, isFirstLogin: false, error: 'Veuillez entrer votre mot de passe' };
+        }
+
+        // Mot de passe incorrect ou manquant pour une équipe qui a déjà un mot de passe (fallback)
         console.log('Password mismatch or missing');
-        return { success: false, isFirstLogin: false };
+        return { success: false, isFirstLogin: false, error: 'Erreur de connexion' };
     };
 
     const logout = () => {

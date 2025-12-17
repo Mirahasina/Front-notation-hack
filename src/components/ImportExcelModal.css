@@ -1,0 +1,150 @@
+/* ImportExcelModal.css */
+
+.import-modal-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.import-file-input-wrapper {
+    position: relative;
+    padding: 2rem;
+    border: 2px dashed rgba(99, 102, 241, 0.3);
+    border-radius: 1rem;
+    background: rgba(30, 41, 59, 0.3);
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.import-file-input-wrapper:hover {
+    border-color: rgba(99, 102, 241, 0.6);
+    background: rgba(30, 41, 59, 0.5);
+}
+
+.import-file-input {
+    width: 100%;
+}
+
+.import-error-msg {
+    color: #ef4444;
+    /* red-500 */
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.import-loading {
+    text-align: center;
+    color: #94a3b8;
+    /* slate-400 */
+    padding: 1rem;
+    font-style: italic;
+}
+
+.import-preview-section {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.import-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    max-height: 250px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.5);
+    /* slate-900/50 */
+}
+
+.import-preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    color: #cbd5e1;
+    /* slate-300 */
+}
+
+.import-preview-table th {
+    background: rgba(30, 41, 59, 0.8);
+    position: sticky;
+    top: 0;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.import-preview-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.import-preview-table tr:last-child td {
+    border-bottom: none;
+}
+
+.import-selectors-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .import-selectors-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.import-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: white;
+    cursor: pointer;
+}
+
+.import-select:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+.import-summary-box {
+    padding: 1rem;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.import-summary-text {
+    margin: 0;
+    color: #818cf8;
+    /* indigo-400 */
+    font-weight: 600;
+}
+
+.import-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

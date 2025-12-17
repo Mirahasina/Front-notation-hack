@@ -20,6 +20,7 @@ interface DataContextType {
 
     // Users
     addUser: (user: Omit<User, 'id'>) => User;
+    updateUser: (id: string, user: Partial<User>) => void;
     deleteUser: (id: string) => void;
 
     // Teams
@@ -136,6 +137,13 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         return newUser;
     };
 
+    const updateUser = (id: string, updates: Partial<User>) => {
+        setData(prev => ({
+            ...prev,
+            users: prev.users.map(u => u.id === id ? { ...u, ...updates } : u)
+        }));
+    };
+
     const deleteUser = (id: string) => {
         setData(prev => ({
             ...prev,
@@ -227,6 +235,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         criteria: filteredCriteria,
         teamScores: filteredTeamScores,
         addUser,
+        updateUser,
         deleteUser,
         addTeam,
         updateTeam,

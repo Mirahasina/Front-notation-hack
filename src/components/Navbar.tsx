@@ -5,7 +5,7 @@ export const Navbar = () => {
 
     const getRoleDisplay = () => {
         if (isAdmin) return { icon: '👑', label: 'Admin' };
-        if (isTeam) return { icon: '👥', label: 'Équipe' };
+        if (isTeam) return { label: 'Équipe' };
         return { icon: '⚖️', label: 'Jury' };
     };
 
