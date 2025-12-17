@@ -165,11 +165,11 @@ export const PublicResults = () => {
                                             )}
                                         </div>
 
-                                        <div className="flex-1 text-left min-w-0 flex flex-col justify-center h-full py-1">
+                                        <div className="flex-1 text-center min-w-0 flex flex-col justify-center items-center h-full py-1">
                                             <h3 className={`text-2xl md:text-3xl font-bold db-1 truncate mb-1 leading-tight ${isPodium ? 'text-white' : 'text-slate-300'}`}>
                                                 {team.name}
                                             </h3>
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center justify-center gap-3">
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border ${isPodium ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
                                                     Projet
                                                 </span>

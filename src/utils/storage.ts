@@ -1,12 +1,12 @@
 import type { AppData, User, Event } from '../types';
 
-const STORAGE_KEY = 'jury_platform_data';
+const STORAGE_KEY = 'jury_platform_data_v2';
 const DEFAULT_EVENT_ID = 'event-juryhack-2025';
 
 const defaultAdmin: User = {
     id: 'admin-1',
     username: 'admin',
-    password: 'admin_RISE@2345',
+    password: 'admin_RISE@',
     role: 'admin'
 };
 
@@ -27,11 +27,7 @@ const getDefaultData = (): AppData => ({
     teamScores: []
 });
 
-/**
- * Migrate old data format to new multi-event format
- */
 const migrateData = (data: any): AppData => {
-    // If events array doesn't exist, this is old format
     if (!data.events || data.events.length === 0) {
         console.log('Migrating data to multi-event format...');
 
@@ -52,7 +48,6 @@ const migrateData = (data: any): AppData => {
             }))
         };
 
-        // Assign jury users to default event if they don't have one
         migratedData.users = migratedData.users.map(user => ({
             ...user,
             eventId: user.role === 'jury' && !user.eventId ? DEFAULT_EVENT_ID : user.eventId

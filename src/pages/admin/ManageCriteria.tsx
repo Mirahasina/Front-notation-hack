@@ -6,12 +6,15 @@ import { useData } from '../../contexts/DataContext';
 import './ManageCriteria.css';
 
 export const ManageCriteria = () => {
-    const { criteria, addCriterion, updateCriterion, deleteCriterion, currentEventId } = useData();
+    const { criteria, addCriterion, updateCriterion, deleteCriterion, currentEventId, users, updateUser } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [maxScore, setMaxScore] = useState('');
     const [priorityOrder, setPriorityOrder] = useState('');
+    const [selectedJuryId, setSelectedJuryId] = useState<string>('');
+
+    const juries = users.filter(u => u.role === 'jury');
 
     // Trier les critères par ordre de priorité
     const sortedCriteria = [...criteria].sort((a, b) => a.priorityOrder - b.priorityOrder);
@@ -21,6 +24,8 @@ export const ManageCriteria = () => {
 
         if (!currentEventId) return;
 
+        let targetId = editingId;
+
         if (editingId) {
             updateCriterion(editingId, {
                 name,
@@ -29,11 +34,36 @@ export const ManageCriteria = () => {
                 eventId: currentEventId
             });
         } else {
-            addCriterion({
+            const newCriterion = addCriterion({
                 name,
                 maxScore: Number(maxScore),
                 priorityOrder: Number(priorityOrder),
                 eventId: currentEventId
+            });
+            targetId = newCriterion.id;
+        }
+
+        // Update juries assignments (One Criterion -> One Jury)
+        if (targetId) {
+            juries.forEach(jury => {
+                const currentassignments = jury.assignedCriteriaIds || [];
+                const hasAssignment = currentassignments.includes(targetId as string);
+
+                if (jury.id === selectedJuryId) {
+                    // This is the chosen jury, ensure they have the assignment
+                    if (!hasAssignment) {
+                        updateUser(jury.id, {
+                            assignedCriteriaIds: [...currentassignments, targetId as string]
+                        });
+                    }
+                } else {
+                    // This is NOT the chosen jury, remove assignment if present
+                    if (hasAssignment) {
+                        updateUser(jury.id, {
+                            assignedCriteriaIds: currentassignments.filter(id => id !== targetId)
+                        });
+                    }
+                }
             });
         }
 
@@ -45,6 +75,7 @@ export const ManageCriteria = () => {
         setMaxScore('');
         setPriorityOrder('');
         setEditingId(null);
+        setSelectedJuryId('');
         setIsModalOpen(false);
     };
 
@@ -55,6 +86,11 @@ export const ManageCriteria = () => {
             setMaxScore(criterion.maxScore.toString());
             setPriorityOrder(criterion.priorityOrder?.toString() || '1');
             setEditingId(id);
+
+            // Find the jury who has this criterion assigned
+            const assignedJury = juries.find(j => j.assignedCriteriaIds?.includes(id));
+            setSelectedJuryId(assignedJury ? assignedJury.id : '');
+
             setIsModalOpen(true);
         }
     };
@@ -71,6 +107,7 @@ export const ManageCriteria = () => {
             ? Math.max(...criteria.map(c => c.priorityOrder || 0)) + 1
             : 1;
         setPriorityOrder(nextPriority.toString());
+        setSelectedJuryId('');
         setIsModalOpen(true);
     };
 
@@ -123,33 +160,42 @@ export const ManageCriteria = () => {
 
                 {criteria.length === 0 ? (
                     <div className="card text-center py-12">
-                        <span className="text-4xl mb-4 block">📏</span>
                         <h3 className="text-xl font-bold mb-2">Aucun critère défini</h3>
                         <p className="text-slate-400">Cliquez sur "Nouveau Critère" pour commencer</p>
                     </div>
                 ) : (
                     <div className="criteria-list">
-                        {sortedCriteria.map(criterion => (
-                            <div key={criterion.id} className="criterion-item">
-                                <div className="criterion-left">
-                                    <div className="priority-badge">
-                                        #{criterion.priorityOrder || '?'}
+                        {sortedCriteria.map(criterion => {
+                            // Find assigned jury
+                            const assignedJury = juries.find(j => j.assignedCriteriaIds?.includes(criterion.id));
+
+                            return (
+                                <div key={criterion.id} className="criterion-item">
+                                    <div className="criterion-left">
+                                        <div className="priority-badge">
+                                            #{criterion.priorityOrder || '?'}
+                                        </div>
+                                        <div className="criterion-details">
+                                            <h3>{criterion.name}</h3>
+                                            <p className="criterion-max-score">Max: <span>{criterion.maxScore} pts</span></p>
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                Assigné à : <span className={`font-medium ${assignedJury ? 'text-indigo-400' : 'text-slate-500'}`}>
+                                                    {assignedJury ? assignedJury.username : 'Non assigné'}
+                                                </span>
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="criterion-details">
-                                        <h3>{criterion.name}</h3>
-                                        <p className="criterion-max-score">Max: <span>{criterion.maxScore} pts</span></p>
+                                    <div className="criterion-actions">
+                                        <button onClick={() => handleEdit(criterion.id)} className="btn-icon-action" title="Modifier">
+                                            ✏️
+                                        </button>
+                                        <button onClick={() => handleDelete(criterion.id)} className="btn-icon-action delete" title="Supprimer">
+                                            🗑️
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="criterion-actions">
-                                    <button onClick={() => handleEdit(criterion.id)} className="btn-icon-action" title="Modifier">
-                                        ✏️
-                                    </button>
-                                    <button onClick={() => handleDelete(criterion.id)} className="btn-icon-action delete" title="Supprimer">
-                                        🗑️
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -171,35 +217,55 @@ export const ManageCriteria = () => {
                     />
                 </div>
 
-                <div className="form-group mb-4">
-                    <label className="form-label block mb-2">Note maximale *</label>
-                    <input
-                        type="number"
-                        value={maxScore}
-                        onChange={e => setMaxScore(e.target.value)}
-                        placeholder="Ex: 20"
-                        min="1"
-                        step="0.5"
-                        className="input-base w-full"
-                    />
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="form-group">
+                        <label className="form-label block mb-2">Note maximale *</label>
+                        <input
+                            type="number"
+                            value={maxScore}
+                            onChange={e => setMaxScore(e.target.value)}
+                            placeholder="Ex: 20"
+                            min="1"
+                            step="0.5"
+                            className="input-base w-full"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label block mb-2">Priorité *</label>
+                        <input
+                            type="number"
+                            value={priorityOrder}
+                            onChange={e => setPriorityOrder(e.target.value)}
+                            placeholder="1"
+                            min="1"
+                            className="input-base w-full"
+                        />
+                    </div>
                 </div>
 
                 <div className="form-group mb-6">
-                    <label className="form-label block mb-2">Ordre de priorité * (1 = plus important)</label>
-                    <input
-                        type="number"
-                        value={priorityOrder}
-                        onChange={e => setPriorityOrder(e.target.value)}
-                        placeholder="Ex: 1, 2, 3..."
-                        min="1"
-                        className="input-base w-full"
-                    />
-                    <p className="priority-help-text">
-                        Utilisé pour départager les ex aequo (le critère #1 est comparé en premier)
-                    </p>
+                    <label className="form-label block mb-2">Assigner à un jury (bêta)</label>
+                    <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-2">
+                        <select
+                            value={selectedJuryId}
+                            onChange={e => setSelectedJuryId(e.target.value)}
+                            className="w-full bg-slate-800 text-white border border-slate-600 rounded-lg p-3 focus:outline-none focus:border-indigo-500"
+                        >
+                            <option value="">-- Sélectionner un jury --</option>
+                            {juries.map(jury => (
+                                <option key={jury.id} value={jury.id}>
+                                    {jury.username} {jury.assignedCriteriaIds?.length ? `(${jury.assignedCriteriaIds.length} critères)` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-slate-500 mt-2 px-1">
+                            Un critère ne peut être corrigé que par un seul jury.
+                        </p>
+                    </div>
                 </div>
 
-                <div className="flex gap-4 justify-end">
+                <div className="flex gap-4 justify-end pt-4 border-t border-slate-800">
                     <button onClick={resetForm} className="btn-secondary">
                         Annuler
                     </button>

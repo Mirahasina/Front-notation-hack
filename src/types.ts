@@ -5,6 +5,7 @@ export interface User {
     role: 'admin' | 'jury' | 'team';
     eventId?: string; // Jury assigned to specific event
     teamId?: string; // Pour les utilisateurs team
+    assignedCriteriaIds?: string[]; // IDs des critères assignés au jury
 }
 
 export interface Event {
@@ -28,7 +29,7 @@ export interface Team {
     id: string;
     eventId: string;
     name: string;
-    email?: string; 
+    email?: string;
     generatedEmail?: string;
     password?: string;
     hasLoggedIn?: boolean;

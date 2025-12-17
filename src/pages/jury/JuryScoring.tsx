@@ -43,7 +43,13 @@ export const JuryScoring = () => {
                 setScores(existingScore.scores);
             } else {
                 const initialScores: Record<string, number> = {};
-                criteria.forEach(c => {
+
+                // Filter criteria if user has assignments
+                const visibleCriteria = (user.assignedCriteriaIds && user.assignedCriteriaIds.length > 0)
+                    ? criteria.filter(c => user.assignedCriteriaIds?.includes(c.id))
+                    : criteria;
+
+                visibleCriteria.forEach(c => {
                     initialScores[c.id] = 0;
                 });
                 setScores(initialScores);
@@ -161,26 +167,29 @@ export const JuryScoring = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {criteria.map(criterion => (
-                                    <tr key={criterion.id}>
-                                        <td>
-                                            <span className="criterion-name">{criterion.name}</span>
-                                        </td>
-                                        <td>
-                                            / {criterion.maxScore}
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max={criterion.maxScore}
-                                                value={scores[criterion.id] || 0}
-                                                onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
-                                                className="score-input"
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
+                                {criteria
+                                    .filter(c => !user?.assignedCriteriaIds || user.assignedCriteriaIds.length === 0 || user.assignedCriteriaIds.includes(c.id))
+                                    .map(criterion => (
+                                        <tr key={criterion.id}>
+                                            <td>
+                                                <span className="criterion-name">{criterion.name}</span>
+                                            </td>
+                                            <td>
+                                                / {criterion.maxScore}
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max={criterion.maxScore}
+                                                    step="0.1"
+                                                    value={scores[criterion.id] || 0}
+                                                    onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
+                                                    className="score-input"
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
                             </tbody>
                         </table>
                     </div>

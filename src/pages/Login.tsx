@@ -132,17 +132,17 @@ export const Login = () => {
                     </div>
 
                     {/* Role Toggle Switch */}
-                    <div className="grid grid-cols-2 p-1.5 mb-10 bg-slate-900/50 border border-slate-800 rounded-2xl relative overflow-hidden">
-                        <div className={`absolute inset-y-1.5 transition-all duration-300 ease-out rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg ${isTeamLogin ? 'left-[calc(50%+0.375rem)] w-[calc(50%-0.75rem)]' : 'left-1.5 w-[calc(50%-0.75rem)]'}`}></div>
+                    <div className="grid grid-cols-2 p-2 mb-12 bg-slate-900/50 border border-slate-800 rounded-2xl relative overflow-hidden">
+                        <div className={`absolute inset-y-2 transition-all duration-300 ease-out rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg ${isTeamLogin ? 'left-[calc(50%+0.5rem)] w-[calc(50%-1rem)]' : 'left-2 w-[calc(50%-1rem)]'}`}></div>
                         <button
                             onClick={() => setIsTeamLogin(false)}
-                            className={`relative z-10 py-3 text-sm font-semibold transition-colors duration-200 flex items-center justify-center gap-2 ${!isTeamLogin ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                            className={`relative z-10 py-4 text-lg font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${!isTeamLogin ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
                         >
                             Jury / Admin
                         </button>
                         <button
                             onClick={() => setIsTeamLogin(true)}
-                            className={`relative z-10 py-8 text-sm font-semibold transition-colors duration-200 flex items-center justify-center gap-2 ${isTeamLogin ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                            className={`relative z-10 py-4 text-lg font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${isTeamLogin ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
                         >
                             Équipe projet
                         </button>

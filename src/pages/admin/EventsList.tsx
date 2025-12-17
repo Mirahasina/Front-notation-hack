@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components/Navbar';
 import { Modal } from '../../components/Modal';
 import { useData } from '../../contexts/DataContext';
+import { ChangePasswordModal } from '../../components/admin/ChangePasswordModal';
 import type { Event } from '../../types';
 
 export const EventsList = () => {
     const { events, addEvent, updateEvent, deleteEvent, setCurrentEventId } = useData();
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [date, setDate] = useState('');
@@ -83,9 +85,17 @@ export const EventsList = () => {
                         </h1>
                         <p className="text-slate-400 mt-1">Créez et gérez vos compétitions</p>
                     </div>
-                    <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-                        + Nouvel événement
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setIsPasswordModalOpen(true)}
+                            className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl border border-slate-700 hover:border-indigo-500 transition-all text-sm font-semibold flex items-center gap-2"
+                        >
+                            <span></span> Changer le mot de passe
+                        </button>
+                        <button onClick={() => setIsModalOpen(true)} className="btn-primary">
+                            + Nouvel événement
+                        </button>
+                    </div>
                 </div>
 
                 {events.length === 0 ? (
@@ -186,6 +196,11 @@ export const EventsList = () => {
                     </div>
                 </div>
             </Modal>
+
+            <ChangePasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+            />
         </div>
     );
 };

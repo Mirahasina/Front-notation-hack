@@ -63,7 +63,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                 </div>
             ) : (
                 <div className="flex flex-col gap-5">
-                    <div className="form-group mb-0">
+                    <div className="form-group">
                         <label className="form-label">Ancien mot de passe</label>
                         <input
                             type="password"
@@ -74,7 +74,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                         />
                     </div>
 
-                    <div className="form-group mb-0">
+                    <div className="form-group">
                         <label className="form-label">Nouveau mot de passe</label>
                         <input
                             type="password"
@@ -85,7 +85,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                         />
                     </div>
 
-                    <div className="form-group mb-0">
+                    <div className="form-group">
                         <label className="form-label">Confirmer le nouveau mot de passe</label>
                         <input
                             type="password"

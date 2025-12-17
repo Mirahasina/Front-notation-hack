@@ -23,9 +23,9 @@ export const AdminDashboard = () => {
                     </div>
                     <button
                         onClick={() => setIsPasswordModalOpen(true)}
-                        className="btn-secondary text-sm"
+                        className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 hover:border-indigo-500 transition-all shadow-lg flex items-center gap-2 group"
                     >
-                        🔐 Changer mot de passe
+                        <span>Changer mot de passe</span>
                     </button>
                 </div>
 
@@ -99,7 +99,7 @@ export const AdminDashboard = () => {
 
             {juries.length > 0 && teams.length > 0 && (
                 <div className="jury-progress-section">
-                    <h2 className="heading-2 mb-6">Progression des Jurys</h2>
+                    <h2 className="heading-2 mb-6">Progression des jurys</h2>
                     <div className="jury-progress-list">
                         {juries.map(jury => {
                             const progress = getJuryProgress(jury.id, teams, teamScores);
