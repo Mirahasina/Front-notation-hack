@@ -83,7 +83,6 @@ export const EventsList = () => {
                         <h1 className="flex items-center gap-3">
                             <span>Gestion des événements</span>
                         </h1>
-                        <p className="text-slate-400 mt-1">Créez et gérez vos compétitions</p>
                     </div>
                     <div className="flex gap-3">
                         <button
