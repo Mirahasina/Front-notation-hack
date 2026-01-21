@@ -1,12 +1,19 @@
 from rest_framework import serializers
-from .models import User, Criterion, Team, TeamScore
+from .models import User, Criterion, Team, TeamScore, Event
 from django.contrib.auth.password_validation import validate_password
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['id', 'name', 'date', 'status', 'description', 'created_at']
+        read_only_fields = ['created_at']
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'role', 'first_name', 'last_name', 'email']
+        fields = ['id', 'username', 'password', 'role', 'first_name', 'last_name', 'email', 'event']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -24,14 +31,17 @@ class LoginSerializer(serializers.Serializer):
 class CriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Criterion
-        fields = ['id', 'name', 'max_score', 'created_at']
+        fields = ['id', 'event', 'name', 'max_score', 'priority_order', 'created_at']
         read_only_fields = ['created_at']
 
 
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
-        fields = ['id', 'name', 'description', 'created_at']
+        fields = [
+            'id', 'event', 'name', 'description', 'email', 'generated_email', 
+            'password', 'has_logged_in', 'passage_order', 'passage_time', 'created_at'
+        ]
         read_only_fields = ['created_at']
 
 
@@ -42,7 +52,7 @@ class TeamScoreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TeamScore
-        fields = ['id', 'jury', 'jury_username', 'team', 'team_name', 
+        fields = ['id', 'event', 'jury', 'jury_username', 'team', 'team_name', 
                   'scores', 'locked', 'submitted_at', 'total', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
@@ -58,13 +68,19 @@ class TeamScoreSerializer(serializers.ModelSerializer):
         if 'scores' in data:
             for criterion_id, score in data['scores'].items():
                 try:
-                    criterion = Criterion.objects.get(id=criterion_id)
+                    # Search specifically in the event context if provided
+                    event = data.get('event') or (self.instance.event if self.instance else None)
+                    if event:
+                        criterion = Criterion.objects.get(id=criterion_id, event=event)
+                    else:
+                        criterion = Criterion.objects.get(id=criterion_id)
+                        
                     if score < 0 or score > criterion.max_score:
                         raise serializers.ValidationError(
                             f"Score for {criterion.name} must be between 0 and {criterion.max_score}"
                         )
                 except Criterion.DoesNotExist:
-                    raise serializers.ValidationError(f"Criterion {criterion_id} does not exist")
+                    raise serializers.ValidationError(f"Criterion {criterion_id} does not exist in this event context")
         
         return data
 

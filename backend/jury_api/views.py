@@ -5,10 +5,11 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.db.models import Sum, Q
 from django.utils import timezone
-from .models import User, Criterion, Team, TeamScore
+from .models import User, Criterion, Team, TeamScore, Event
 from .serializers import (
     UserSerializer, LoginSerializer, CriterionSerializer,
-    TeamSerializer, TeamScoreSerializer, TeamResultSerializer
+    TeamSerializer, TeamScoreSerializer, TeamResultSerializer,
+    EventSerializer
 )
 
 
@@ -20,6 +21,11 @@ class IsAdmin(permissions.BasePermission):
 class IsJury(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.role == 'jury'
+
+
+class IsTeam(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.role == 'team'
 
 
 @api_view(['POST'])
@@ -44,8 +50,23 @@ def login_view(request):
 @api_view(['POST'])
 def logout_view(request):
     if request.user.is_authenticated:
-        request.user.auth_token.delete()
+        try:
+            request.user.auth_token.delete()
+        except:
+            pass
     return Response({'message': 'Logged out successfully'})
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -56,8 +77,11 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         role = self.request.query_params.get('role')
+        event_id = self.request.query_params.get('event_id')
         if role:
             queryset = queryset.filter(role=role)
+        if event_id:
+            queryset = queryset.filter(event_id=event_id)
         return queryset
 
 
@@ -71,6 +95,13 @@ class CriterionViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
+        
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        event_id = self.request.query_params.get('event_id')
+        if event_id:
+            queryset = queryset.filter(event_id=event_id)
+        return queryset
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -83,6 +114,13 @@ class TeamViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
+        
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        event_id = self.request.query_params.get('event_id')
+        if event_id:
+            queryset = queryset.filter(event_id=event_id)
+        return queryset
 
 
 class TeamScoreViewSet(viewsets.ModelViewSet):
@@ -94,11 +132,14 @@ class TeamScoreViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         jury_id = self.request.query_params.get('jury_id')
         team_id = self.request.query_params.get('team_id')
+        event_id = self.request.query_params.get('event_id')
         
         if jury_id:
             queryset = queryset.filter(jury_id=jury_id)
         if team_id:
             queryset = queryset.filter(team_id=team_id)
+        if event_id:
+            queryset = queryset.filter(event_id=event_id)
         
         # Jury can only see their own scores
         if self.request.user.role == 'jury':
@@ -106,11 +147,12 @@ class TeamScoreViewSet(viewsets.ModelViewSet):
         
         return queryset
     
-    def create(self, request, *args, **kwargs):
+    def perform_create(self, serializer):
         # Automatically set jury to current user if jury role
-        if request.user.role == 'jury':
-            request.data['jury'] = request.user.id
-        return super().create(request, *args, **kwargs)
+        if self.request.user.role == 'jury':
+            serializer.save(jury=self.request.user)
+        else:
+            serializer.save()
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -139,10 +181,14 @@ class TeamScoreViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def results_view(request):
-    """Calculate and return final results"""
-    teams = Team.objects.all()
-    juries = User.objects.filter(role='jury')
-    criteria = Criterion.objects.all()
+    """Calculate and return final results for an event"""
+    event_id = request.query_params.get('event_id')
+    if not event_id:
+        return Response({'error': 'event_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    teams = Team.objects.filter(event_id=event_id)
+    juries = User.objects.filter(role='jury', event_id=event_id)
+    criteria = Criterion.objects.filter(event_id=event_id)
     
     results = []
     for team in teams:
@@ -155,7 +201,7 @@ def results_view(request):
         
         for jury in juries:
             try:
-                team_score = TeamScore.objects.get(jury=jury, team=team)
+                team_score = TeamScore.objects.get(jury=jury, team=team, event_id=event_id)
                 scores_dict = team_score.scores
                 jury_total = sum(scores_dict.values())
                 
@@ -185,9 +231,13 @@ def results_view(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def check_completion_view(request):
-    """Check if all teams have been scored by all juries"""
-    teams_count = Team.objects.count()
-    juries_count = User.objects.filter(role='jury').count()
+    """Check if all teams have been scored by all juries for an event"""
+    event_id = request.query_params.get('event_id')
+    if not event_id:
+        return Response({'error': 'event_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    teams_count = Team.objects.filter(event_id=event_id).count()
+    juries_count = User.objects.filter(role='jury', event_id=event_id).count()
     
     if teams_count == 0 or juries_count == 0:
         return Response({
@@ -199,7 +249,7 @@ def check_completion_view(request):
         })
     
     required_scores = teams_count * juries_count
-    completed_scores = TeamScore.objects.filter(locked=True).count()
+    completed_scores = TeamScore.objects.filter(locked=True, event_id=event_id).count()
     
     return Response({
         'all_complete': completed_scores == required_scores,
@@ -219,8 +269,12 @@ def jury_progress_view(request, jury_id):
     except User.DoesNotExist:
         return Response({'error': 'Jury not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    teams_count = Team.objects.count()
-    scored_count = TeamScore.objects.filter(jury=jury, locked=True).count()
+    event_id = jury.event_id
+    if not event_id:
+        return Response({'error': 'Jury is not assigned to an event'}, status=status.HTTP_400_BAD_REQUEST)
+
+    teams_count = Team.objects.filter(event_id=event_id).count()
+    scored_count = TeamScore.objects.filter(jury=jury, locked=True, event_id=event_id).count()
     
     return Response({
         'jury_id': jury.id,

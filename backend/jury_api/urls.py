@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
+router.register(r'events', views.EventViewSet)
 router.register(r'users', views.UserViewSet)
 router.register(r'criteria', views.CriterionViewSet)
 router.register(r'teams', views.TeamViewSet)
