@@ -67,7 +67,9 @@ export const criteriaApi = {
 
 export const teamApi = {
     list: (params?: any) => api.get<Team[]>('/teams/', { params }),
-    create: (data: Omit<Team, 'id'>) => api.post<Team>('/teams/', data),
+    create: (data: Omit<Team, 'id' | 'created_at'>) => api.post<Team>('/teams/', data),
+    bulkCreate: (data: { event_id: string; teams: Array<Omit<Team, 'id' | 'created_at'>> }) =>
+        api.post<{ created_count: number; teams: Team[] }>('/teams/bulk_create/', data),
     update: (id: string, data: Partial<Team>) => api.patch<Team>(`/teams/${id}/`, data),
     delete: (id: string) => api.delete(`/teams/${id}/`),
 };

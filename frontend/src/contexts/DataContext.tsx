@@ -22,6 +22,7 @@ interface DataContextType {
     deleteUser: (id: string) => Promise<void>;
 
     addTeam: (team: Omit<Team, 'id' | 'created_at'>) => Promise<Team>;
+    bulkAddTeams: (teams: Array<Omit<Team, 'id' | 'created_at'>>) => Promise<void>;
     updateTeam: (id: string, team: Partial<Team>) => Promise<void>;
     deleteTeam: (id: string) => Promise<void>;
     deleteAllTeams: () => Promise<void>;
@@ -201,6 +202,21 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         return newTeam;
     };
 
+    const bulkAddTeams = async (teamsData: Array<Omit<Team, 'id' | 'created_at'>>): Promise<void> => {
+        if (!currentEventId) return;
+        try {
+            const response = await teamApi.bulkCreate({
+                event_id: currentEventId,
+                teams: teamsData
+            });
+            const newTeams = response.data.teams;
+            setTeams((prev: Team[]) => [...prev, ...newTeams]);
+        } catch (error) {
+            console.error('Bulk add teams error:', error);
+            throw error;
+        }
+    };
+
     const updateTeam = async (id: string, updates: Partial<Team>): Promise<void> => {
         const response = await teamApi.update(id, updates);
         setTeams((prev: Team[]) => prev.map((t: Team) => t.id === id ? response.data : t));
@@ -275,6 +291,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         updateUser,
         deleteUser,
         addTeam,
+        bulkAddTeams,
         updateTeam,
         deleteTeam,
         deleteAllTeams,

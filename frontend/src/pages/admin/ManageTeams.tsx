@@ -22,7 +22,7 @@ const generatePlatformEmail = (baseEmail: string, teamName: string, index: numbe
 export const ManageTeams = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { teams, addTeam, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId, refresh } = useData();
+    const { teams, addTeam, bulkAddTeams, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId, refresh } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -76,18 +76,19 @@ export const ManageTeams = () => {
     const handleImport = async (imported: Array<{ name: string; description?: string; email?: string }>) => {
         if (!currentEventId) return;
 
-        for (let idx = 0; idx < imported.length; idx++) {
-            const item = imported[idx];
+        const teamsToCreate = imported.map((item, idx) => {
             const teamEmail = item.email || item.description;
             const generated_email = teamEmail ? generatePlatformEmail(teamEmail, item.name, teams.length + idx) : undefined;
-            await addTeam({
+            return {
                 name: item.name,
                 email: teamEmail,
                 generated_email,
                 has_logged_in: false,
                 event: currentEventId
-            });
-        }
+            };
+        });
+
+        await bulkAddTeams(teamsToCreate);
     };
 
     const handleRandomize = async () => {

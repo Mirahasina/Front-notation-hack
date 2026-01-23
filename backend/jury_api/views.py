@@ -145,6 +145,26 @@ class TeamViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAdmin]
             return [permission() for permission in permission_classes]
         
+    @action(detail=False, methods=['post'], permission_classes=[IsAdmin])
+    def bulk_create(self, request):
+        teams_data = request.data.get('teams', [])
+        event_id = request.data.get('event_id')
+        
+        if not event_id:
+            return Response({'error': 'event_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        created_teams = []
+        for team_data in teams_data:
+            team_data['event'] = event_id
+            serializer = self.get_serializer(data=team_data)
+            if serializer.is_valid():
+                serializer.save()
+                created_teams.append(serializer.data)
+            else:
+                pass
+                
+        return Response({'created_count': len(created_teams), 'teams': created_teams}, status=status.HTTP_201_CREATED)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         event_id = self.request.query_params.get('event_id')
