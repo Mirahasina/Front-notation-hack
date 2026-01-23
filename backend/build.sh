@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-# exit on error
+
 set -o errexit
 
 pip install -r requirements.txt
@@ -11,5 +10,5 @@ if [ "$DJANGO_SUPERUSER_USERNAME" ]; then
     python manage.py createsuperuser \
         --no-input \
         --username $DJANGO_SUPERUSER_USERNAME \
-        --email $DJANGO_SUPERUSER_EMAIL
+        --email $DJANGO_SUPERUSER_EMAIL || true
 fi
