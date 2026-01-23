@@ -12,7 +12,18 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-producti
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{h}" for h in ALLOWED_HOSTS if h != '*' and not h.startswith('http')
+]
+if '*' in ALLOWED_HOSTS:
+    render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+    if render_host:
+        CSRF_TRUSTED_ORIGINS.append(f"https://{render_host}")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
