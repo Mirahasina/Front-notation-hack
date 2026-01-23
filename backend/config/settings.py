@@ -12,18 +12,17 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-producti
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+ALLOWED_HOSTS = ['*']
 
+# Render specific settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
+# CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
-    f"https://{h}" for h in ALLOWED_HOSTS if h != '*' and not h.startswith('http')
+    'https://*.onrender.com',
+    'https://*.vercel.app',
 ]
-if '*' in ALLOWED_HOSTS:
-    render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-    if render_host:
-        CSRF_TRUSTED_ORIGINS.append(f"https://{render_host}")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,11 +31,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    
     'jury_api',
 ]
 
@@ -121,11 +118,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
 }
 
-CORS_ALLOWED_ORIGINS = os.getenv(
-    'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://localhost:5173'
-).split(',')
-
+# CORS Settings - permissive for production setup
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
