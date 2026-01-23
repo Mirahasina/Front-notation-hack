@@ -52,11 +52,11 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(() => {
-        const sessionUser = localStorage.getItem('current_user');
+        const sessionUser = sessionStorage.getItem('current_user');
         return sessionUser ? JSON.parse(sessionUser) : null;
     });
     const [currentTeam, setCurrentTeam] = useState<Team | null>(() => {
-        const sessionTeam = localStorage.getItem('current_team');
+        const sessionTeam = sessionStorage.getItem('current_team');
         return sessionTeam ? JSON.parse(sessionTeam) : null;
     });
 
@@ -66,8 +66,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             const { token, user: loggedUser } = response.data;
 
             setUser(loggedUser);
-            localStorage.setItem('auth_token', token);
-            localStorage.setItem('current_user', JSON.stringify(loggedUser));
+            sessionStorage.setItem('auth_token', token);
+            sessionStorage.setItem('current_user', JSON.stringify(loggedUser));
 
             return { success: true, role: loggedUser.role };
         } catch (error: any) {
@@ -119,9 +119,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     setCurrentTeam(team);
                     // On n'a pas de token réel pour une équipe simulée, 
                     // mais on en met un fictif pour ne pas casser la logique de l'API interceptor si besoin
-                    localStorage.setItem('auth_token', 'simulated-team-token');
-                    localStorage.setItem('current_user', JSON.stringify(loggedUser));
-                    localStorage.setItem('current_team', JSON.stringify(team));
+                    sessionStorage.setItem('auth_token', 'simulated-team-token');
+                    sessionStorage.setItem('current_user', JSON.stringify(loggedUser));
+                    sessionStorage.setItem('current_team', JSON.stringify(team));
 
                     return { success: true, isFirstLogin: false };
                 } else {
@@ -150,9 +150,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } finally {
             setUser(null);
             setCurrentTeam(null);
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('current_user');
-            localStorage.removeItem('current_team');
+            sessionStorage.removeItem('auth_token');
+            sessionStorage.removeItem('current_user');
+            sessionStorage.removeItem('current_team');
         }
     };
 

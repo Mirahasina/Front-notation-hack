@@ -55,7 +55,7 @@ interface DataProviderProps {
 
 export const DataProvider = ({ children }: DataProviderProps) => {
     const [events, setEvents] = useState<Event[]>([]);
-    const [currentEventId, setCurrentEventIdState] = useState<string | null>(() => localStorage.getItem('current_event_id'));
+    const [currentEventId, setCurrentEventIdState] = useState<string | null>(() => sessionStorage.getItem('current_event_id'));
     const [users, setUsers] = useState<User[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [criteria, setCriteria] = useState<Criterion[]>([]);
@@ -148,9 +148,9 @@ export const DataProvider = ({ children }: DataProviderProps) => {
     const setCurrentEventId = (id: string | null) => {
         setCurrentEventIdState(id);
         if (id) {
-            localStorage.setItem('current_event_id', id);
+            sessionStorage.setItem('current_event_id', id);
         } else {
-            localStorage.removeItem('current_event_id');
+            sessionStorage.removeItem('current_event_id');
         }
     };
 
