@@ -36,6 +36,7 @@ interface DataContextType {
 
     refresh: () => Promise<void>;
     isLoading: boolean;
+    error: string | null;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -60,22 +61,24 @@ export const DataProvider = ({ children }: DataProviderProps) => {
     const [criteria, setCriteria] = useState<Criterion[]>([]);
     const [teamScores, setTeamScores] = useState<TeamScore[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchEvents = async () => {
+            setError(null);
             try {
                 const response = await eventApi.list();
                 const data = response.data as any;
                 const eventsData = data.results || data;
                 setEvents(eventsData);
                 if (eventsData.length > 0 && !currentEventId) {
-                    // Try to find default event or use first if nothing stored
                     const def = eventsData.find((e: Event) => e.id === DEFAULT_EVENT_ID || e.name.includes('2025'));
                     const selectedId = def ? def.id : eventsData[0].id;
                     setCurrentEventId(selectedId);
                 }
-            } catch (error) {
-                console.error('Error fetching events:', error);
+            } catch (err: any) {
+                console.error('Error fetching events:', err);
+                setError("Impossible de charger les événements. Le serveur est peut-être en train de redémarrer.");
             } finally {
                 setIsLoading(false);
             }
@@ -88,6 +91,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
         const fetchData = async () => {
             setIsLoading(true);
+            setError(null);
             try {
                 const [usersRes, teamsRes, criteriaRes, scoresRes] = await Promise.all([
                     userApi.list({ event_id: currentEventId }),
@@ -105,8 +109,9 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 setTeams(tData.results || tData);
                 setCriteria(cData.results || cData);
                 setTeamScores(sData.results || sData);
-            } catch (error) {
-                console.error('Error fetching event data:', error);
+            } catch (err: any) {
+                console.error('Error fetching event data:', err);
+                setError("Erreur lors de la récupération des données. Vérifiez votre connexion.");
             } finally {
                 setIsLoading(false);
             }
@@ -116,6 +121,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
     const refresh = async () => {
         if (!currentEventId) return;
+        setError(null);
         try {
             const [usersRes, teamsRes, criteriaRes, scoresRes] = await Promise.all([
                 userApi.list({ event_id: currentEventId }),
@@ -133,8 +139,9 @@ export const DataProvider = ({ children }: DataProviderProps) => {
             setTeams(tData.results || tData);
             setCriteria(cData.results || cData);
             setTeamScores(sData.results || sData);
-        } catch (error) {
-            console.error('Refresh error:', error);
+        } catch (err: any) {
+            console.error('Refresh error:', err);
+            setError("Impossible de rafraîchir les données.");
         }
     };
 
@@ -301,7 +308,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         saveTeamScore,
         getTeamScore,
         refresh,
-        isLoading
+        isLoading,
+        error
     };
 
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

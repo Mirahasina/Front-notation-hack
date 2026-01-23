@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const api = axios.create({
     baseURL: API_URL,
+    timeout: 60000, // 60 seconds to accommodate Render cold start
     headers: {
         'Content-Type': 'application/json',
     },

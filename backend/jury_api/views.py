@@ -384,3 +384,8 @@ def jury_progress_view(request, jury_id):
         'scored_count': scored_count,
         'percentage': round((scored_count / teams_count * 100) if teams_count > 0 else 0)
     })
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def ping_view(request):
+    return Response({'status': 'ok', 'timestamp': timezone.now()})
