@@ -3,11 +3,11 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateResults, areAllTeamsScored } from '../utils/calculations';
 import * as XLSX from 'xlsx';
-import { Download, Trophy, Users, Star, Medal } from 'lucide-react';
+import { Download, Trophy, Users, Star, Medal, AlertCircle } from 'lucide-react';
 
 export const PublicResults = () => {
     const { isAdmin } = useAuth();
-    const { teams, users, teamScores, criteria, events, currentEventId } = useData();
+    const { teams, users, teamScores, criteria, events, currentEventId, isLoading, error, refresh } = useData();
     const [revealed, setRevealed] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
@@ -100,6 +100,40 @@ export const PublicResults = () => {
     const progressPercentage = totalExpectedEvaluations > 0
         ? Math.min(100, Math.round((currentEvaluations / totalExpectedEvaluations) * 100))
         : 0;
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8">
+                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-red-100 border border-red-100 max-w-lg w-full text-center">
+                    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <AlertCircle size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Données indisponibles</h2>
+                    <p className="text-slate-500 mb-8">{error}</p>
+                    <button
+                        onClick={() => refresh()}
+                        className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                    >
+                        Réessayer la connexion
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (isLoading && !revealed) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+                <div className="relative">
+                    <div className="w-20 h-20 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Trophy size={20} className="text-blue-600" />
+                    </div>
+                </div>
+                <p className="mt-6 text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Chargement des scores...</p>
+            </div>
+        );
+    }
 
     if (!allScored && !revealed) {
         return (
