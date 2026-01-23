@@ -14,6 +14,7 @@ class Event(models.Model):
     date = models.DateTimeField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ongoing')
     description = models.TextField(blank=True, null=True)
+    instructions = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -33,6 +34,8 @@ class User(AbstractUser):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='jury')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
+    track = models.CharField(max_length=100, blank=True, null=True)
+    assigned_criteria = models.JSONField(default=list, blank=True)
     
     class Meta:
         db_table = 'users'
@@ -43,6 +46,7 @@ class Criterion(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='criteria', null=True, blank=True)
     name = models.CharField(max_length=200)
     max_score = models.IntegerField(validators=[MinValueValidator(1)])
+    weight = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
     priority_order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -64,6 +68,7 @@ class Team(models.Model):
     has_logged_in = models.BooleanField(default=False)
     passage_order = models.IntegerField(null=True, blank=True)
     passage_time = models.CharField(max_length=100, null=True, blank=True)
+    track = models.CharField(max_length=100, blank=True, null=True)
     imported_from = models.CharField(max_length=50, default='manual')
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -80,6 +85,8 @@ class TeamScore(models.Model):
     jury = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'jury'})
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     scores = models.JSONField(default=dict)
+    criterion_comments = models.JSONField(default=dict, blank=True)
+    global_comments = models.TextField(blank=True, null=True)
     locked = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -94,5 +101,28 @@ class TeamScore(models.Model):
         return f"{self.jury.username} -> {self.team.name}"
     
     def get_total(self):
-        """Calculate total score"""
-        return sum(self.scores.values())
+        """Calculate total score with weights"""
+        total = 0
+        from .models import Criterion
+        criteria_map = {c.id: c.weight for c in Criterion.objects.filter(event=self.event)}
+        
+        for criterion_id, score in self.scores.items():
+            weight = criteria_map.get(int(criterion_id), 1.0)
+            total += float(score) * float(weight)
+        return total
+
+
+class AuditLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=100)
+    target_type = models.CharField(max_length=100)
+    target_id = models.CharField(max_length=100, blank=True, null=True)
+    changes = models.JSONField(default=dict)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'audit_logs'
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.action} on {self.target_type} at {self.timestamp}"

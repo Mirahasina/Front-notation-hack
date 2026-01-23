@@ -6,21 +6,29 @@ from django.contrib.auth.password_validation import validate_password
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['id', 'name', 'date', 'status', 'description', 'created_at']
+        fields = ['id', 'name', 'date', 'status', 'description', 'instructions', 'created_at']
         read_only_fields = ['created_at']
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'role', 'first_name', 'last_name', 'email', 'event']
+        fields = ['id', 'username', 'password', 'role', 'first_name', 'last_name', 'email', 'event', 'track', 'assigned_criteria']
         extra_kwargs = {
             'password': {'write_only': True}
         }
     
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+        return User.objects.create_user(**validated_data)
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 
 class LoginSerializer(serializers.Serializer):
@@ -31,7 +39,7 @@ class LoginSerializer(serializers.Serializer):
 class CriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Criterion
-        fields = ['id', 'event', 'name', 'max_score', 'priority_order', 'created_at']
+        fields = ['id', 'event', 'name', 'max_score', 'weight', 'priority_order', 'created_at']
         read_only_fields = ['created_at']
 
 
@@ -40,7 +48,7 @@ class TeamSerializer(serializers.ModelSerializer):
         model = Team
         fields = [
             'id', 'event', 'name', 'description', 'email', 'generated_email', 
-            'password', 'has_logged_in', 'passage_order', 'passage_time', 'created_at'
+            'password', 'has_logged_in', 'passage_order', 'passage_time', 'track', 'created_at'
         ]
         read_only_fields = ['created_at']
 
@@ -53,7 +61,8 @@ class TeamScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamScore
         fields = ['id', 'event', 'jury', 'jury_username', 'team', 'team_name', 
-                  'scores', 'locked', 'submitted_at', 'total', 'created_at', 'updated_at']
+                  'scores', 'criterion_comments', 'global_comments', 'locked', 
+                  'submitted_at', 'total', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_total(self, obj):

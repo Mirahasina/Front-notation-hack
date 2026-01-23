@@ -5,12 +5,14 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.db.models import Sum, Q
 from django.utils import timezone
+from django.core.cache import cache
 from .models import User, Criterion, Team, TeamScore, Event
 from .serializers import (
     UserSerializer, LoginSerializer, CriterionSerializer,
     TeamSerializer, TeamScoreSerializer, TeamResultSerializer,
     EventSerializer
 )
+from .utils import log_action
 
 
 class IsAdmin(permissions.BasePermission):
@@ -48,6 +50,7 @@ def login_view(request):
 
 
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def logout_view(request):
     if request.user.is_authenticated:
         try:
@@ -63,7 +66,7 @@ class EventViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
@@ -72,7 +75,12 @@ class EventViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdmin]
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.AllowAny()]
+        if self.action == 'retrieve':
+            return [permissions.IsAuthenticated()]
+        return [IsAdmin()]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -91,7 +99,7 @@ class CriterionViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
@@ -102,6 +110,28 @@ class CriterionViewSet(viewsets.ModelViewSet):
         if event_id:
             queryset = queryset.filter(event_id=event_id)
         return queryset
+
+    def clear_results_cache(self, event_id):
+        if event_id:
+            cache.delete(f'results_{event_id}')
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        self.clear_results_cache(instance.event_id)
+        log_action(self.request.user, "CREATE", "Criterion", instance.id, serializer.data)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self.clear_results_cache(instance.event_id)
+        log_action(self.request.user, "UPDATE", "Criterion", instance.id, serializer.data)
+
+    def perform_destroy(self, instance):
+        id = instance.id
+        event_id = instance.event_id
+        name = instance.name
+        instance.delete()
+        self.clear_results_cache(event_id)
+        log_action(self.request.user, "DELETE", "Criterion", id, {"name": name})
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -109,24 +139,35 @@ class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSerializer
     
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.IsAuthenticated]
+        if self.action in ['list', 'retrieve', 'partial_update']:
+            return [permissions.AllowAny()]
         else:
             permission_classes = [IsAdmin]
-        return [permission() for permission in permission_classes]
+            return [permission() for permission in permission_classes]
         
     def get_queryset(self):
         queryset = super().get_queryset()
         event_id = self.request.query_params.get('event_id')
+        generated_email = self.request.query_params.get('generated_email')
+        
         if event_id:
             queryset = queryset.filter(event_id=event_id)
+        if generated_email:
+            queryset = queryset.filter(generated_email__iexact=generated_email)
+            
         return queryset
 
 
 class TeamScoreViewSet(viewsets.ModelViewSet):
     queryset = TeamScore.objects.all()
     serializer_class = TeamScoreSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -141,19 +182,27 @@ class TeamScoreViewSet(viewsets.ModelViewSet):
         if event_id:
             queryset = queryset.filter(event_id=event_id)
         
-        # Jury can only see their own scores
-        if self.request.user.role == 'jury':
+        if self.request.user.is_authenticated and self.request.user.role == 'jury':
             queryset = queryset.filter(jury=self.request.user)
         
         return queryset
     
+    def clear_results_cache(self, event_id):
+        if event_id:
+            cache.delete(f'results_{event_id}')
+
     def perform_create(self, serializer):
-        # Automatically set jury to current user if jury role
+        instance = serializer.save()
+        self.clear_results_cache(instance.event_id)
         if self.request.user.role == 'jury':
             serializer.save(jury=self.request.user)
         else:
             serializer.save()
     
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self.clear_results_cache(instance.event_id)
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.locked:
@@ -174,18 +223,49 @@ class TeamScoreViewSet(viewsets.ModelViewSet):
         team_score.submitted_at = timezone.now()
         team_score.save()
         
+        self.clear_results_cache(team_score.event_id)
+        
+        log_action(request.user, "LOCK", "TeamScore", team_score.id, {"team": team_score.team.name})
+        
+        serializer = self.get_serializer(team_score)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
+    def reset(self, request, pk=None):
+        """Reset (unlock and clear) the score - Admin only"""
+        team_score = self.get_object()
+        old_data = {
+            "scores": team_score.scores,
+            "locked": team_score.locked
+        }
+        team_score.locked = False
+        team_score.scores = {}
+        team_score.criterion_comments = {}
+        team_score.global_comments = ""
+        team_score.submitted_at = None
+        team_score.save()
+        
+        self.clear_results_cache(team_score.event_id)
+        
+        log_action(request.user, "RESET", "TeamScore", team_score.id, old_data)
+        
         serializer = self.get_serializer(team_score)
         return Response(serializer.data)
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def results_view(request):
     """Calculate and return final results for an event"""
     event_id = request.query_params.get('event_id')
     if not event_id:
         return Response({'error': 'event_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
         
+    cache_key = f'results_{event_id}'
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return Response(cached_data)
+
     teams = Team.objects.filter(event_id=event_id)
     juries = User.objects.filter(role='jury', event_id=event_id)
     criteria = Criterion.objects.filter(event_id=event_id)
@@ -225,6 +305,7 @@ def results_view(request):
     # Sort by total score descending
     results.sort(key=lambda x: x['total_score'], reverse=True)
     
+    cache.set(cache_key, results, 300) # Cache for 5 minutes
     return Response(results)
 
 

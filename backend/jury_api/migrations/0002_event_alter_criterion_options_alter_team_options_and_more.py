@@ -34,50 +34,45 @@ class Migration(migrations.Migration):
             name='team',
             options={'ordering': ['passage_order', 'created_at']},
         ),
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.AddField(
-                    model_name='criterion',
-                    name='priority_order',
-                    field=models.IntegerField(default=0),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='email',
-                    field=models.EmailField(blank=True, max_length=254, null=True),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='generated_email',
-                    field=models.EmailField(blank=True, max_length=254, null=True),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='has_logged_in',
-                    field=models.BooleanField(default=False),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='imported_from',
-                    field=models.CharField(default='manual', max_length=50),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='passage_order',
-                    field=models.IntegerField(blank=True, null=True),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='passage_time',
-                    field=models.CharField(blank=True, max_length=100, null=True),
-                ),
-                migrations.AddField(
-                    model_name='team',
-                    name='password',
-                    field=models.CharField(blank=True, max_length=128, null=True),
-                ),
-            ],
-            database_operations=[],
+        migrations.AddField(
+            model_name='criterion',
+            name='priority_order',
+            field=models.IntegerField(default=0),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='email',
+            field=models.EmailField(blank=True, max_length=254, null=True),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='generated_email',
+            field=models.EmailField(blank=True, max_length=254, null=True),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='has_logged_in',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='imported_from',
+            field=models.CharField(default='manual', max_length=50),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='passage_order',
+            field=models.IntegerField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='passage_time',
+            field=models.CharField(blank=True, max_length=100, null=True),
+        ),
+        migrations.AddField(
+            model_name='team',
+            name='password',
+            field=models.CharField(blank=True, max_length=128, null=True),
         ),
         migrations.AlterField(
             model_name='user',
