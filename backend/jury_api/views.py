@@ -154,16 +154,26 @@ class TeamViewSet(viewsets.ModelViewSet):
             return Response({'error': 'event_id is required'}, status=status.HTTP_400_BAD_REQUEST)
             
         created_teams = []
-        for team_data in teams_data:
+        errors = []
+        for index, team_data in enumerate(teams_data):
             team_data['event'] = event_id
             serializer = self.get_serializer(data=team_data)
             if serializer.is_valid():
                 serializer.save()
                 created_teams.append(serializer.data)
             else:
-                pass
+                errors.append({
+                    'index': index,
+                    'name': team_data.get('name', 'Unknown'),
+                    'details': serializer.errors
+                })
                 
-        return Response({'created_count': len(created_teams), 'teams': created_teams}, status=status.HTTP_201_CREATED)
+        return Response({
+            'created_count': len(created_teams),
+            'teams': created_teams,
+            'errors_count': len(errors),
+            'errors': errors if errors else None
+        }, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         queryset = super().get_queryset()

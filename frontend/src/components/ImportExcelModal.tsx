@@ -8,7 +8,7 @@ import { FileSpreadsheet, Upload, AlertCircle, CheckCircle2, ChevronRight, X } f
 interface ImportExcelModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onImport: (teams: Array<{ name: string; email?: string }>) => void;
+    onImport: (teams: Array<{ name: string; email?: string }>) => Promise<void>;
 }
 
 export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModalProps) => {
@@ -56,24 +56,35 @@ export const ImportExcelModal = ({ isOpen, onClose, onImport }: ImportExcelModal
         }
     };
 
-    const handleImport = () => {
+    const handleImport = async () => {
         if (!preview || !rawData || !selectedNameColumn) return;
 
-        const teams = extractTeamsFromColumn(
-            rawData,
-            preview.headers,
-            selectedNameColumn,
-            undefined,
-            selectedEmailColumn || undefined
-        );
+        setError('');
+        setIsLoading(true);
 
-        if (teams.length === 0) {
-            setError('Aucun projet trouvé dans la colonne sélectionnée');
-            return;
+        try {
+            const teams = extractTeamsFromColumn(
+                rawData,
+                preview.headers,
+                selectedNameColumn,
+                undefined,
+                selectedEmailColumn || undefined
+            );
+
+            if (teams.length === 0) {
+                setError('Aucun projet trouvé dans la colonne sélectionnée');
+                setIsLoading(false);
+                return;
+            }
+
+            await onImport(teams);
+            handleClose();
+        } catch (err: any) {
+            console.error('Import error:', err);
+            setError(err.response?.data?.error || 'Erreur lors de l’importation vers le serveur.');
+        } finally {
+            setIsLoading(false);
         }
-
-        onImport(teams);
-        handleClose();
     };
 
     const handleClose = () => {
