@@ -16,7 +16,7 @@ const defaultEvent: Event = {
     date: new Date().toISOString(),
     status: 'ongoing',
     description: 'Événement par défaut',
-    createdAt: new Date().toISOString()
+    created_at: new Date().toISOString()
 };
 
 const getDefaultData = (): AppData => ({
@@ -36,21 +36,21 @@ const migrateData = (data: any): AppData => {
             events: [defaultEvent],
             teams: (data.teams || []).map((team: any) => ({
                 ...team,
-                eventId: team.eventId || DEFAULT_EVENT_ID
+                event: team.event || team.eventId || DEFAULT_EVENT_ID
             })),
             criteria: (data.criteria || []).map((criterion: any) => ({
                 ...criterion,
-                eventId: criterion.eventId || DEFAULT_EVENT_ID
+                event: criterion.event || criterion.eventId || DEFAULT_EVENT_ID
             })),
             teamScores: (data.teamScores || []).map((score: any) => ({
                 ...score,
-                eventId: score.eventId || DEFAULT_EVENT_ID
+                event: score.event || score.eventId || DEFAULT_EVENT_ID
             }))
         };
 
         migratedData.users = migratedData.users.map(user => ({
             ...user,
-            eventId: user.role === 'jury' && !user.eventId ? DEFAULT_EVENT_ID : user.eventId
+            event: (user as any).event || (user as any).eventId || (user.role === 'jury' ? DEFAULT_EVENT_ID : undefined)
         }));
 
         return migratedData;

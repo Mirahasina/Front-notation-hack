@@ -56,6 +56,22 @@ export const calculateResults = (
 
         const averageScore = juries.length > 0 ? totalScore / juries.length : 0;
 
+        let perfectScoresCount = 0;
+        criteria.forEach(criterion => {
+            juryScores.forEach(js => {
+                if (js.scores[criterion.id] === criterion.max_score) {
+                    perfectScoresCount++;
+                }
+            });
+        });
+
+        const juryTotals = juryScores.map(js => js.total);
+        const mean = averageScore;
+        const variance = juries.length > 0
+            ? juryTotals.reduce((sum, total) => sum + Math.pow(total - mean, 2), 0) / juries.length
+            : 0;
+        const standardDeviation = Math.sqrt(variance);
+
         return {
             teamId: team.id,
             teamName: team.name,
@@ -63,7 +79,9 @@ export const calculateResults = (
             totalScore,
             averageScore,
             criterionScores,
-            juryScores
+            juryScores,
+            perfectScoresCount,
+            standardDeviation
         };
     });
 
@@ -71,7 +89,6 @@ export const calculateResults = (
         if (b.totalScore !== a.totalScore) {
             return b.totalScore - a.totalScore;
         }
-
         for (const criterion of sortedCriteria) {
             const aScore = a.criterionScores[criterion.id] || 0;
             const bScore = b.criterionScores[criterion.id] || 0;
@@ -80,7 +97,10 @@ export const calculateResults = (
             }
         }
 
-        return 0;
+        if (b.perfectScoresCount !== a.perfectScoresCount) {
+            return b.perfectScoresCount - a.perfectScoresCount;
+        }
+        return a.standardDeviation - b.standardDeviation;
     });
 };
 

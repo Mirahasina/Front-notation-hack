@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { User, Team, Criterion, TeamScore, Event, AppData } from '../types';
+import type { User, Team, Criterion, TeamScore, Event } from '../types';
 import { eventApi, userApi, teamApi, criteriaApi, scoreApi } from '../services/api';
 const DEFAULT_EVENT_ID = 'event-juryhack-2025';
 
 interface DataContextType {
-    // Events
     events: Event[];
     currentEventId: string | null;
     setCurrentEventId: (id: string) => void;
@@ -13,34 +12,29 @@ interface DataContextType {
     updateEvent: (id: string, event: Partial<Event>) => Promise<void>;
     deleteEvent: (id: string) => Promise<void>;
 
-    // Data (filtered by current event)
     users: User[];
     teams: Team[];
     criteria: Criterion[];
     teamScores: TeamScore[];
 
-    // Users
     addUser: (user: Omit<User, 'id'>) => Promise<User>;
     updateUser: (id: string, user: Partial<User>) => Promise<void>;
     deleteUser: (id: string) => Promise<void>;
 
-    // Teams
     addTeam: (team: Omit<Team, 'id' | 'created_at'>) => Promise<Team>;
     updateTeam: (id: string, team: Partial<Team>) => Promise<void>;
     deleteTeam: (id: string) => Promise<void>;
     deleteAllTeams: () => Promise<void>;
 
-    // Criteria
     addCriterion: (criterion: Omit<Criterion, 'id' | 'created_at'>) => Promise<Criterion>;
     updateCriterion: (id: string, criterion: Partial<Criterion>) => Promise<void>;
     deleteCriterion: (id: string) => Promise<void>;
 
-    // Team Scores
     saveTeamScore: (score: TeamScore) => Promise<void>;
     getTeamScore: (juryId: string, teamId: string) => TeamScore | undefined;
 
-    // Refresh
     refresh: () => Promise<void>;
+    isLoading: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -59,22 +53,22 @@ interface DataProviderProps {
 
 export const DataProvider = ({ children }: DataProviderProps) => {
     const [events, setEvents] = useState<Event[]>([]);
-    const [currentEventId, setCurrentEventId] = useState<string | null>(null);
+    const [currentEventId, setCurrentEventIdState] = useState<string | null>(() => localStorage.getItem('current_event_id'));
     const [users, setUsers] = useState<User[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [criteria, setCriteria] = useState<Criterion[]>([]);
     const [teamScores, setTeamScores] = useState<TeamScore[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Initial fetch of events
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 const response = await eventApi.list();
-                const eventsData = response.data.results || response.data;
+                const data = response.data as any;
+                const eventsData = data.results || data;
                 setEvents(eventsData);
-                if (eventsData.length > 0) {
-                    // Try to find default event or use first
+                if (eventsData.length > 0 && !currentEventId) {
+                    // Try to find default event or use first if nothing stored
                     const def = eventsData.find((e: Event) => e.id === DEFAULT_EVENT_ID || e.name.includes('2025'));
                     const selectedId = def ? def.id : eventsData[0].id;
                     setCurrentEventId(selectedId);
@@ -88,7 +82,6 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         fetchEvents();
     }, []);
 
-    // Fetch data when currentEventId changes
     useEffect(() => {
         if (!currentEventId) return;
 
@@ -101,10 +94,16 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                     criteriaApi.list({ event_id: currentEventId }),
                     scoreApi.list({ event_id: currentEventId })
                 ]);
-                setUsers(usersRes.data.results || usersRes.data);
-                setTeams(teamsRes.data.results || teamsRes.data);
-                setCriteria(criteriaRes.data.results || criteriaRes.data);
-                setTeamScores(scoresRes.data.results || scoresRes.data);
+
+                const uData = usersRes.data as any;
+                const tData = teamsRes.data as any;
+                const cData = criteriaRes.data as any;
+                const sData = scoresRes.data as any;
+
+                setUsers(uData.results || uData);
+                setTeams(tData.results || tData);
+                setCriteria(cData.results || cData);
+                setTeamScores(sData.results || sData);
             } catch (error) {
                 console.error('Error fetching event data:', error);
             } finally {
@@ -123,12 +122,27 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 criteriaApi.list({ event_id: currentEventId }),
                 scoreApi.list({ event_id: currentEventId })
             ]);
-            setUsers(usersRes.data.results || usersRes.data);
-            setTeams(teamsRes.data.results || teamsRes.data);
-            setCriteria(criteriaRes.data.results || criteriaRes.data);
-            setTeamScores(scoresRes.data.results || scoresRes.data);
+
+            const uData = usersRes.data as any;
+            const tData = teamsRes.data as any;
+            const cData = criteriaRes.data as any;
+            const sData = scoresRes.data as any;
+
+            setUsers(uData.results || uData);
+            setTeams(tData.results || tData);
+            setCriteria(cData.results || cData);
+            setTeamScores(sData.results || sData);
         } catch (error) {
             console.error('Refresh error:', error);
+        }
+    };
+
+    const setCurrentEventId = (id: string | null) => {
+        setCurrentEventIdState(id);
+        if (id) {
+            localStorage.setItem('current_event_id', id);
+        } else {
+            localStorage.removeItem('current_event_id');
         }
     };
 
@@ -269,7 +283,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         deleteCriterion,
         saveTeamScore,
         getTeamScore,
-        refresh
+        refresh,
+        isLoading
     };
 
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

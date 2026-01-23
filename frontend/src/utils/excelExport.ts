@@ -7,9 +7,9 @@ export const exportTeamsToExcel = (teams: Team[]): void => {
         return {
             'Nom du Projet': team.name,
             'Nom Plateforme': platformName,
-            'Email Généré': team.generatedEmail || '-',
-            'Ordre de Passage': team.passageOrder || '-',
-            'Heure de Passage': team.passageTime || '-'
+            'Email Généré': team.generated_email || '-',
+            'Ordre de Passage': team.passage_order || '-',
+            'Heure de Passage': team.passage_time || '-'
         };
     });
 

@@ -3,9 +3,13 @@ export interface User {
     username: string;
     password?: string;
     role: 'admin' | 'jury' | 'team';
+    first_name?: string;
+    last_name?: string;
+    email?: string;
     event?: string;
-    teamId?: string;
+    track?: string;
     assigned_criteria?: string[];
+    teamId?: string;
 }
 
 export interface Event {
@@ -14,6 +18,7 @@ export interface Event {
     date: string;
     status: 'upcoming' | 'ongoing' | 'completed';
     description?: string;
+    instructions?: string;
     created_at: string;
 }
 
@@ -22,6 +27,7 @@ export interface Criterion {
     event: string;
     name: string;
     max_score: number;
+    weight: number;
     priority_order: number;
     created_at: string;
 }
@@ -35,8 +41,9 @@ export interface Team {
     generated_email?: string;
     password?: string;
     has_logged_in?: boolean;
-    passage_order?: number;
-    passage_time?: string;
+    passage_order?: number | null;
+    passage_time?: string | null;
+    track?: string;
     created_at: string;
 }
 
@@ -48,8 +55,11 @@ export interface TeamScore {
     team: string;
     team_name?: string;
     scores: Record<string, number>;
+    criterion_comments: Record<string, string>;
+    global_comments: string;
     locked: boolean;
     submitted_at?: string;
+    total?: number;
     created_at?: string;
     updated_at?: string;
 }
@@ -67,6 +77,8 @@ export interface TeamResult {
         scores: Record<string, number>;
         total: number;
     }[];
+    perfectScoresCount: number;
+    standardDeviation: number;
 }
 
 export interface AppData {

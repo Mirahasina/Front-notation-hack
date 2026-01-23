@@ -1,5 +1,3 @@
-/* JuryScoring.css */
-
 .jury-scoring-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
@@ -7,10 +5,10 @@
     padding-bottom: 4rem;
 }
 
-.scoring-container {
-    max-width: 64rem;
+.scoring-container-white {
+    max-width: 56rem;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1rem;
 }
 
 @media (min-width: 1024px) {
@@ -20,8 +18,11 @@
 }
 
 .scoring-header {
-    margin-bottom: 3rem;
-    text-align: center;
+    margin-bottom: 2rem;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .scoring-title {
@@ -55,10 +56,10 @@
 }
 
 .scoring-dot.current {
-    background: #6366f1;
+    background: #0f172a;
     /* indigo-500 */
-    transform: scale(1.5);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    transform: scale(1.3);
+    box-shadow: 0 0 10px rgba(15, 23, 42, 0.2);
 }
 
 /* Main Scoring Card */
@@ -95,6 +96,7 @@
     font-weight: 800;
     background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -121,9 +123,9 @@
 }
 
 .scoring-table td {
-    padding: 1.5rem;
-    background: rgba(15, 23, 42, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1.25rem;
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
 }
 
 .scoring-table tr td:first-child {
@@ -199,6 +201,7 @@
     line-height: 1;
     background: linear-gradient(135deg, #6366f1, #a855f7);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -304,10 +307,12 @@
     border-radius: 9999px;
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 .score-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 1.5rem;
     height: 1.5rem;
     background: #6366f1;
@@ -326,4 +331,119 @@
     .scoring-grid-layout {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+.scoring-container-white {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.scoring-title-white {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+}
+
+.scoring-card-white {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-name-display-white {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.criterion-name-white {
+    font-size: 1.125rem;
+}
+
+.score-input-white {
+    width: 100%;
+    max-width: 6rem;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    color: #1e293b;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.score-input-white:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.total-row-display-white {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: #f8fafc;
+    border-radius: 1.25rem;
+    margin-top: 1rem;
+    border: 1px solid #f1f5f9;
+}
+
+.total-label-white {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.total-score-white {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.total-max-white {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.btn-large-success-white {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: white;
+    background: #1e293b;
+    border-radius: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-large-success-white:hover {
+    background: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.state-card-white {
+    max-width: 40rem;
+    margin: 4rem auto;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }

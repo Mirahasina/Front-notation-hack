@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import { DashboardLayout } from '../../components/layouts/DashboardLayout';
@@ -8,7 +9,6 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { ImportExcelModal } from '../../components/ImportExcelModal';
-import { PassageOrderDisplay } from '../../components/PassageOrderDisplay';
 import { assignPassageOrder, clearPassageOrder } from '../../utils/randomizer';
 import { exportTeamsToExcel } from '../../utils/excelExport';
 
@@ -22,12 +22,21 @@ const generatePlatformEmail = (baseEmail: string, teamName: string, index: numbe
 export const ManageTeams = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { teams, addTeam, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId } = useData();
+    const { teams, addTeam, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId, refresh } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+
+    useEffect(() => {
+        const maxPage = Math.ceil(teams.length / itemsPerPage);
+        if (currentPage > maxPage && maxPage > 0) {
+            setCurrentPage(maxPage);
+        }
+    }, [teams.length, currentPage]);
 
     const generatePlatformName = (teamName: string, index: number) => {
         const baseName = teamName.replace(/\s+/g, '_');
@@ -52,7 +61,6 @@ export const ManageTeams = () => {
                 event: currentEventId
             });
         } else {
-            // Pas de mot de passe ici - généré à la première connexion
             await addTeam({
                 name,
                 email: email || undefined,
@@ -90,16 +98,18 @@ export const ManageTeams = () => {
                 passage_time: team.passage_time
             });
         }
+        await refresh();
     };
 
     const handleClearOrder = async () => {
         const cleared = clearPassageOrder(teams);
         for (const team of cleared) {
             await updateTeam(team.id, {
-                passage_order: undefined,
-                passage_time: undefined
+                passage_order: null,
+                passage_time: null
             });
         }
+        await refresh();
     };
 
     const resetForm = () => {
@@ -151,7 +161,7 @@ export const ManageTeams = () => {
                     <p className="text-slate-500 mt-1">Gérez les équipes et leur ordre de passage</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => navigate('/admin')}>
+                    <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
                         ← Retour
                     </Button>
                     <Button variant="secondary" onClick={() => setIsImportModalOpen(true)}>
@@ -164,6 +174,9 @@ export const ManageTeams = () => {
                             </Button>
                             <Button variant="danger" onClick={handleDeleteAll}>
                                 Tout effacer
+                            </Button>
+                            <Button variant="secondary" onClick={handleClearOrder}>
+                                Réinitialiser l'ordre
                             </Button>
                             <Button variant="primary" onClick={handleRandomize}>
                                 Tirage au sort
@@ -185,83 +198,122 @@ export const ManageTeams = () => {
                     </Button>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                    {teams.map((team, index) => {
-                        const progress = getTeamProgress(team.id);
-                        const percentage = progress.total > 0
-                            ? Math.round((progress.scored / progress.total) * 100)
-                            : 0;
-                        const platformName = generatePlatformName(team.name, index);
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                        {teams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((team) => {
+                            const originalIndex = teams.findIndex(t => t.id === team.id);
+                            const progress = getTeamProgress(team.id);
+                            const percentage = progress.total > 0
+                                ? Math.round((progress.scored / progress.total) * 100)
+                                : 0;
+                            const platformName = generatePlatformName(team.name, originalIndex);
 
-                        return (
-                            <Card key={team.id} className="group hover:shadow-lg transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
-                                <div>
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-lg font-bold text-slate-900 line-clamp-2">{team.name}</h3>
-                                        <span className="px-2 py-1 bg-slate-100 rounded text-xs font-mono text-slate-500">
-                                            #{index + 1}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-3 mb-6 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                                            <span className="text-xs font-mono text-slate-500 truncate" title={platformName}>
-                                                {platformName}
+                            return (
+                                <Card key={team.id} className="group hover:shadow-lg transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3 className="text-lg font-bold text-slate-900 line-clamp-2">{team.name}</h3>
+                                            <span className="px-2 py-1 bg-slate-100 rounded text-xs font-mono text-slate-500">
+                                                #{originalIndex + 1}
                                             </span>
                                         </div>
-                                        {team.generated_email && (
+
+                                        <div className="space-y-3 mb-6 p-3 bg-slate-50 rounded-lg border border-slate-100">
                                             <div className="flex items-center gap-2">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                                <span className="text-xs text-slate-500 truncate" title={team.generated_email}>
-                                                    {team.generated_email}
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                                <span className="text-xs font-mono text-slate-500 truncate" title={platformName}>
+                                                    {platformName}
                                                 </span>
                                             </div>
-                                        )}
-                                        {team.passage_order && (
-                                            <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
-                                                <span className="text-[10px] text-slate-400 uppercase font-bold">Passage</span>
+                                            {team.generated_email && (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-amber-600">#{team.passage_order}</span>
-                                                    {team.passage_time && <span className="text-xs text-amber-500">à {team.passage_time}</span>}
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                    <span className="text-xs text-slate-500 truncate" title={team.generated_email}>
+                                                        {team.generated_email}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {team.passage_order && (
+                                                <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                                                    <span className="text-[10px] text-slate-400 uppercase font-bold">Passage</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold text-amber-600">#{team.passage_order}</span>
+                                                        {team.passage_time && <span className="text-xs text-amber-500">à {team.passage_time}</span>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${progress.total > 0 && percentage === 100 ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                {progress.scored}/{progress.total} votes
+                                            </span>
+                                            {team.has_logged_in && (
+                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Connecté</span>
+                                            )}
+                                        </div>
+
+                                        {progress.total > 0 && (
+                                            <div className="mb-6">
+                                                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-500 ${percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                                                        style={{ width: `${percentage}%` }}
+                                                    />
                                                 </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${progress.total > 0 && percentage === 100 ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                                            {progress.scored}/{progress.total} votes
-                                        </span>
-                                        {team.has_logged_in && (
-                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Connecté</span>
-                                        )}
+                                    <div className="grid grid-cols-2 gap-2 mt-2 pt-4 border-t border-slate-100">
+                                        <Button variant="ghost" size="sm" onClick={() => handleEdit(team.id)}>
+                                            Modifier
+                                        </Button>
+                                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(team.id)}>
+                                            Supprimer
+                                        </Button>
                                     </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
 
-                                    {progress.total > 0 && (
-                                        <div className="mb-6">
-                                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-500 ${percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
-                                                    style={{ width: `${percentage}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                    {teams.length > itemsPerPage && (
+                        <div className="flex justify-center items-center gap-4 mb-10">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="flex items-center gap-1"
+                            >
+                                <ChevronLeft size={16} /> Précédent
+                            </Button>
 
-                                <div className="grid grid-cols-2 gap-2 mt-2 pt-4 border-t border-slate-100">
-                                    <Button variant="ghost" size="sm" onClick={() => handleEdit(team.id)}>
-                                        Modifier
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(team.id)}>
-                                        Supprimer
-                                    </Button>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                            <div className="flex gap-2">
+                                {[...Array(Math.ceil(teams.length / itemsPerPage))].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(teams.length / itemsPerPage), prev + 1))}
+                                disabled={currentPage === Math.ceil(teams.length / itemsPerPage)}
+                                className="flex items-center gap-1"
+                            >
+                                Suivant <ChevronRight size={16} />
+                            </Button>
+                        </div>
+                    )}
+                </>
             )}
 
             <Modal
@@ -278,14 +330,6 @@ export const ManageTeams = () => {
                             onChange={e => setName(e.target.value)}
                             placeholder="Ex: RISE UI"
                         />
-                        {name && (
-                            <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                                <p className="text-xs text-blue-500 font-bold uppercase mb-1">Identifiant Plateforme</p>
-                                <p className="text-sm font-mono text-slate-700">
-                                    {name.replace(/\s+/g, '_')}_Team{editingId ? teams.findIndex(t => t.id === editingId) + 1 : teams.length + 1}
-                                </p>
-                            </div>
-                        )}
                     </div>
 
                     <div>
@@ -296,17 +340,6 @@ export const ManageTeams = () => {
                             onChange={e => setEmail(e.target.value)}
                             placeholder="contact@example.com"
                         />
-                        {email && name && (
-                            <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
-                                <p className="text-xs text-emerald-600 font-bold uppercase mb-1">Email de Connexion</p>
-                                <p className="text-sm font-mono text-slate-700 break-all">
-                                    {generatePlatformEmail(email, name, editingId ? teams.findIndex(t => t.id === editingId) : teams.length)}
-                                </p>
-                            </div>
-                        )}
-                        <p className="text-xs text-slate-500 mt-2">
-                            Le mot de passe sera généré lors de la première connexion.
-                        </p>
                     </div>
 
                     <div className="flex gap-4 justify-end pt-4">
@@ -329,8 +362,6 @@ export const ManageTeams = () => {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={handleImport}
             />
-
-            <PassageOrderDisplay teams={teams} onClear={handleClearOrder} />
         </DashboardLayout>
     );
 };

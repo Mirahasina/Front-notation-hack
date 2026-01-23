@@ -10,23 +10,18 @@ export const Login = () => {
     const navigate = useNavigate();
     const { login, loginTeam } = useAuth();
 
-    // Login Mode
     const [isTeamLogin, setIsTeamLogin] = useState(false);
 
-    // Admin/Jury State
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
-    // Team State
-    const [teamName, setTeamName] = useState('');
+    const [teamEmail, setTeamEmail] = useState('');
     const [teamPassword, setTeamPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    // UI State
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // First login modal state
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [generatedPassword, setGeneratedPassword] = useState('');
     const [passwordCopied, setPasswordCopied] = useState(false);
@@ -55,7 +50,7 @@ export const Login = () => {
         setIsLoading(true);
 
         try {
-            const result = await loginTeam(teamName, teamPassword);
+            const result = await loginTeam(teamEmail, teamPassword);
 
             if (result.success) {
                 if (result.isFirstLogin && result.generatedPassword) {
@@ -111,10 +106,10 @@ export const Login = () => {
             {isTeamLogin ? (
                 <form onSubmit={handleTeamLogin} className="space-y-4">
                     <Input
-                        label="Nom du projet"
-                        placeholder="Ex: Lova UI"
-                        value={teamName}
-                        onChange={e => setTeamName(e.target.value)}
+                        label="Email de l'équipe"
+                        placeholder="Ex: lova+RISE_Team1@gmail.com"
+                        value={teamEmail}
+                        onChange={e => setTeamEmail(e.target.value)}
                         fullWidth
                     />
                     <Input
@@ -229,7 +224,7 @@ export const Login = () => {
                         size="lg"
                         onClick={async () => {
                             // Automatically log in with new password
-                            const result = await loginTeam(teamName, generatedPassword);
+                            const result = await loginTeam(teamEmail, generatedPassword);
                             if (result.success) {
                                 setShowPasswordModal(false);
                                 navigate('/team/dashboard');

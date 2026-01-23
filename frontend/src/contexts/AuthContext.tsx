@@ -1,8 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Team } from '../types';
 import { authApi, teamApi } from '../services/api';
-import api from '../services/api';
 
 const generateRandomPassword = (): string => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -52,23 +51,14 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
-
-    useEffect(() => {
-        const token = localStorage.getItem('auth_token');
+    const [user, setUser] = useState<User | null>(() => {
         const sessionUser = localStorage.getItem('current_user');
+        return sessionUser ? JSON.parse(sessionUser) : null;
+    });
+    const [currentTeam, setCurrentTeam] = useState<Team | null>(() => {
         const sessionTeam = localStorage.getItem('current_team');
-
-        if (token && sessionUser) {
-            setUser(JSON.parse(sessionUser));
-        }
-        if (sessionTeam) {
-            setCurrentTeam(JSON.parse(sessionTeam));
-        }
-    }, []);
-
-
+        return sessionTeam ? JSON.parse(sessionTeam) : null;
+    });
 
     const login = async (username: string, password: string): Promise<LoginResult> => {
         try {
@@ -90,7 +80,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const loginTeam = async (email: string, password?: string): Promise<TeamLoginResult> => {
         try {
             const response = await teamApi.list({ generated_email: email });
-            const team = response.data[0];
+            const teamsData = (response.data as any).results || response.data;
+            const team = teamsData[0];
 
             if (!team) {
                 console.log('Team not found for email:', email);
@@ -113,31 +104,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 return { success: true, isFirstLogin: true, generatedPassword: newPassword };
             }
 
-            // Si le mot de passe est fourni, vérifier la correspondance
             if (password) {
                 if (team.password && team.password === password) {
                     console.log('Password match! Logging in...');
 
-                    try {
-                        const authResponse = await authApi.login({ username: email, password });
-                        const { token, user: loggedUser } = authResponse.data;
+                    const loggedUser: User = {
+                        id: `team-${team.id}`,
+                        username: team.name,
+                        role: 'team',
+                        teamId: team.id
+                    };
 
-                        setUser(loggedUser);
-                        setCurrentTeam(team);
-                        localStorage.setItem('auth_token', token);
-                        localStorage.setItem('current_user', JSON.stringify(loggedUser));
-                        localStorage.setItem('current_team', JSON.stringify(team));
+                    setUser(loggedUser);
+                    setCurrentTeam(team);
+                    // On n'a pas de token réel pour une équipe simulée, 
+                    // mais on en met un fictif pour ne pas casser la logique de l'API interceptor si besoin
+                    localStorage.setItem('auth_token', 'simulated-team-token');
+                    localStorage.setItem('current_user', JSON.stringify(loggedUser));
+                    localStorage.setItem('current_team', JSON.stringify(team));
 
-                        return { success: true, isFirstLogin: false };
-                    } catch (error) {
-                        return { success: false, isFirstLogin: false, error: 'Erreur d\'authentification' };
-                    }
+                    return { success: true, isFirstLogin: false };
                 } else {
                     return { success: false, isFirstLogin: false, error: 'Mot de passe incorrect' };
                 }
             }
 
-            // Cas où le mot de passe est manquant pour une équipe qui a déjà un mot de passe
             if (team.password && !password) {
                 return { success: false, isFirstLogin: false, error: 'Veuillez entrer votre mot de passe' };
             }
@@ -151,7 +142,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const logout = async () => {
         try {
-            await authApi.logout();
+            if (user && user.role !== 'team') {
+                await authApi.logout();
+            }
         } catch (error) {
             console.error('Logout error:', error);
         } finally {

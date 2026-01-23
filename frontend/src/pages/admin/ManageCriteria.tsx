@@ -19,6 +19,7 @@ export const ManageCriteria = () => {
     const [name, setName] = useState('');
     const [maxScore, setMaxScore] = useState('');
     const [priorityOrder, setPriorityOrder] = useState('');
+    const [weight, setWeight] = useState('1.0');
     const [selectedJuryId, setSelectedJuryId] = useState<string>('');
 
     const juries = users.filter(u => u.role === 'jury');
@@ -41,6 +42,7 @@ export const ManageCriteria = () => {
             const newCriterion = await addCriterion({
                 name,
                 max_score: Number(maxScore),
+                weight: Number(weight),
                 priority_order: Number(priorityOrder),
                 event: currentEventId
             });
@@ -76,6 +78,7 @@ export const ManageCriteria = () => {
         setMaxScore('');
         setPriorityOrder('');
         setEditingId(null);
+        setWeight('1.0');
         setSelectedJuryId('');
         setIsModalOpen(false);
     };
@@ -86,6 +89,7 @@ export const ManageCriteria = () => {
             setName(criterion.name);
             setMaxScore(criterion.max_score.toString());
             setPriorityOrder(criterion.priority_order?.toString() || '1');
+            setWeight(criterion.weight?.toString() || '1.0');
             setEditingId(id);
             const assignedJury = juries.find(j => j.assigned_criteria?.includes(id));
             setSelectedJuryId(assignedJury ? assignedJury.id : '');
@@ -104,6 +108,7 @@ export const ManageCriteria = () => {
             ? Math.max(...criteria.map(c => c.priority_order || 0)) + 1
             : 1;
         setPriorityOrder(nextPriority.toString());
+        setWeight('1.0');
         setSelectedJuryId('');
         setIsModalOpen(true);
     };
@@ -123,7 +128,7 @@ export const ManageCriteria = () => {
                     <p className="text-slate-500 mt-1">Définissez les critères d'évaluation et leur pondération</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => navigate('/admin')}>
+                    <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
                         ← Retour
                     </Button>
                     <Button variant="primary" onClick={handleOpenNewModal}>
@@ -181,12 +186,20 @@ export const ManageCriteria = () => {
 
                                 <div className="flex-1 text-center md:text-left">
                                     <h3 className="font-bold text-slate-900 text-lg mb-1">{criterion.name}</h3>
-                                    <p className="text-sm text-slate-500 flex items-center justify-center md:justify-start gap-2">
-                                        Assigné à :
-                                        <span className={`font-medium px-2 py-0.5 rounded text-xs ${assignedJury ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
-                                            {assignedJury ? assignedJury.username : 'Non assigné'}
-                                        </span>
-                                    </p>
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                        <p className="text-sm text-slate-500 flex items-center gap-2">
+                                            Assigné à :
+                                            <span className={`font-medium px-2 py-0.5 rounded text-xs ${assignedJury ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                {assignedJury ? assignedJury.username : 'Non assigné'}
+                                            </span>
+                                        </p>
+                                        <p className="text-sm text-slate-500 flex items-center gap-2">
+                                            Coefficient :
+                                            <span className="font-bold px-2 py-0.5 rounded text-xs bg-amber-50 text-amber-700">
+                                                x {criterion.weight || 1.0}
+                                            </span>
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div className="text-center md:text-right px-4 py-2 bg-slate-50 rounded-lg border border-slate-100 min-w-[100px]">
@@ -195,22 +208,22 @@ export const ManageCriteria = () => {
                                 </div>
 
                                 <div className="flex gap-2">
-                                < Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEdit(criterion.id)}
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
+                                    < Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEdit(criterion.id)}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
 
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => handleDelete(criterion.id)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        onClick={() => handleDelete(criterion.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
 
                             </Card>
@@ -252,6 +265,15 @@ export const ManageCriteria = () => {
                             onChange={e => setPriorityOrder(e.target.value)}
                             placeholder="1"
                             min="1"
+                        />
+                        <Input
+                            label="Coefficient (Poids) *"
+                            type="number"
+                            value={weight}
+                            onChange={e => setWeight(e.target.value)}
+                            placeholder="1.0"
+                            min="0.1"
+                            step="0.1"
                         />
                     </div>
 

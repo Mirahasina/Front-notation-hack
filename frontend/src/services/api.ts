@@ -10,7 +10,6 @@ const api = axios.create({
     },
 });
 
-// Add a request interceptor to add the auth token to every request
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('auth_token');
@@ -20,6 +19,22 @@ api.interceptors.request.use(
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('current_team');
+
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
 );
 
 export const authApi = {

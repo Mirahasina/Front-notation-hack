@@ -59,31 +59,29 @@ export const parseExcelPreview = (rawData: any[][]): ExcelPreview => {
 
     return {
         headers,
-        rows: rows.slice(0, 10), // Aperçu limité à 10 lignes
+        rows: rows.slice(0, 10),
         totalRows: dataRows.length
     };
 };
 
-/**
- * Extrait les noms d'équipes depuis une colonne spécifique
- */
+
 export const extractTeamsFromColumn = (
     rawData: any[][],
     headers: string[],
     nameColumn: string,
     descriptionColumn?: string,
-    emailColumn?: string
-): Array<{ name: string; description?: string; email?: string }> => {
-    const teams: Array<{ name: string; description?: string; email?: string }> = [];
+    emailColumn?: string,
+    trackColumn?: string
+): Array<{ name: string; description?: string; email?: string; track?: string }> => {
+    const teams: Array<{ name: string; description?: string; email?: string; track?: string }> = [];
 
-    // Trouver les index des colonnes
     const nameIndex = headers.indexOf(nameColumn);
     const descIndex = descriptionColumn ? headers.indexOf(descriptionColumn) : -1;
     const emailIndex = emailColumn ? headers.indexOf(emailColumn) : -1;
+    const trackIndex = trackColumn ? headers.indexOf(trackColumn) : -1;
 
     if (nameIndex === -1) return [];
 
-    // Ignorer la première ligne (headers)
     const dataRows = rawData.slice(1);
 
     dataRows.forEach(row => {
@@ -92,7 +90,8 @@ export const extractTeamsFromColumn = (
             teams.push({
                 name: String(name).trim(),
                 description: descIndex !== -1 ? String(row[descIndex] || '').trim() : undefined,
-                email: emailIndex !== -1 ? String(row[emailIndex] || '').trim() : undefined
+                email: emailIndex !== -1 ? String(row[emailIndex] || '').trim() : undefined,
+                track: trackIndex !== -1 ? String(row[trackIndex] || '').trim() : undefined
             });
         }
     });

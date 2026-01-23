@@ -9,6 +9,7 @@ import { ManageTeams } from './pages/admin/ManageTeams';
 import { JuryScoring } from './pages/jury/JuryScoring';
 import { TeamDashboard } from './pages/team/TeamDashboard';
 import { PublicResults } from './pages/PublicResults';
+import { LiveQueue } from './pages/admin/LiveQueue';
 
 function App() {
   const { isAuthenticated, isAdmin, isTeam } = useAuth();
@@ -62,6 +63,7 @@ function App() {
         <Route path="/admin/juries" element={<ManageJuries />} />
         <Route path="/admin/criteria" element={<ManageCriteria />} />
         <Route path="/admin/teams" element={<ManageTeams />} />
+        <Route path="/admin/live-queue" element={<LiveQueue />} />
         <Route path="/results" element={<PublicResults />} />
         <Route path="/results/:eventId" element={<PublicResults />} />
         <Route path="*" element={<Navigate to="/admin/events" replace />} />

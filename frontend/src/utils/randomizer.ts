@@ -24,8 +24,8 @@ export const assignPassageOrder = (
 
     return shuffled.map((team, index) => ({
         ...team,
-        passageOrder: index + 1,
-        passageTime: startTime ? calculateTimeSlot(startTime, index * intervalMinutes) : undefined
+        passage_order: index + 1,
+        passage_time: startTime ? calculateTimeSlot(startTime, index * intervalMinutes) : undefined
     }));
 };
 
@@ -68,8 +68,8 @@ export const generateTimeSlots = (
 export const clearPassageOrder = (teams: Team[]): Team[] => {
     return teams.map(team => ({
         ...team,
-        passageOrder: undefined,
-        passageTime: undefined
+        passage_order: null,
+        passage_time: null
     }));
 };
 
@@ -78,9 +78,8 @@ export const clearPassageOrder = (teams: Team[]): Team[] => {
  */
 export const sortByPassageOrder = (teams: Team[]): Team[] => {
     return [...teams].sort((a, b) => {
-        if (a.passageOrder === undefined && b.passageOrder === undefined) return 0;
-        if (a.passageOrder === undefined) return 1;
-        if (b.passageOrder === undefined) return -1;
-        return a.passageOrder - b.passageOrder;
+        const orderA = a.passage_order ?? 999999;
+        const orderB = b.passage_order ?? 999999;
+        return orderA - orderB;
     });
 };

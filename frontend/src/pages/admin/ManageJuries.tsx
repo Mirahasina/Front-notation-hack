@@ -13,7 +13,7 @@ import type { User } from '../../types';
 export const ManageJuries = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { users, addUser, updateUser, deleteUser, currentEventId } = useData();
+    const { users, addUser, updateUser, deleteUser, criteria, currentEventId } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingJury, setEditingJury] = useState<User | null>(null);
     const [juryName, setJuryName] = useState('');
@@ -115,7 +115,7 @@ export const ManageJuries = () => {
                     <p className="text-slate-500 mt-1">Créez et gérez les comptes des membres du jury</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => navigate('/admin')}>
+                    <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
                         ← Retour
                     </Button>
                     <Button variant="primary" onClick={() => handleOpenModal()}>
@@ -125,7 +125,7 @@ export const ManageJuries = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {juries.map((jury, index) => (
+                {juries.map((jury) => (
                     <Card key={jury.id} className="group hover:shadow-lg transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
                         <div>
                             <div className="flex justify-between items-start mb-4">
@@ -135,7 +135,6 @@ export const ManageJuries = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-slate-900">{jury.username}</h3>
-                                        <p className="text-xs text-slate-500">Jury</p>
                                     </div>
                                 </div>
                             </div>
@@ -199,7 +198,7 @@ export const ManageJuries = () => {
                             autoFocus
                             value={juryName}
                             onChange={e => setJuryName(e.target.value)}
-                            placeholder="Ex: Jean Dupont"
+                            placeholder="Ex: RISE Jury"
                         />
                         {!editingJury && juryName && (
                             <p className="text-xs text-slate-500 mt-2 ml-1">
@@ -220,6 +219,38 @@ export const ManageJuries = () => {
                                 Si vide, un mot de passe aléatoire sera généré.
                             </p>
                         )}
+                    </div>
+
+
+                    <div>
+                        <p className="text-sm font-bold text-slate-700 mb-3">Critères assignés</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100 max-h-48 overflow-y-auto">
+                            {criteria.map(crit => (
+                                <label key={crit.id} className="flex items-center gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedCriteriaIds.includes(crit.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedCriteriaIds([...selectedCriteriaIds, crit.id]);
+                                            } else {
+                                                setSelectedCriteriaIds(selectedCriteriaIds.filter(id => id !== crit.id));
+                                            }
+                                        }}
+                                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{crit.name}</span>
+                                </label>
+                            ))}
+                            {criteria.length === 0 && (
+                                <p className="col-span-full text-xs text-slate-400 italic text-center py-2">
+                                    Aucun critère défini pour cet événement.
+                                </p>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-2 ml-1 uppercase font-bold tracking-widest">
+                            Si aucun critère n'est sélectionné, le jury évaluera TOUS les critères.
+                        </p>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">

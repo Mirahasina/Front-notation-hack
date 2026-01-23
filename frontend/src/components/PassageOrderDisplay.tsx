@@ -7,7 +7,7 @@ interface PassageOrderDisplayProps {
 }
 
 export const PassageOrderDisplay = ({ teams, onClear }: PassageOrderDisplayProps) => {
-    const orderedTeams = sortByPassageOrder(teams).filter(t => t.passageOrder !== undefined);
+    const orderedTeams = sortByPassageOrder(teams).filter(t => t.passage_order !== undefined);
 
     if (orderedTeams.length === 0) {
         return null;
@@ -28,7 +28,7 @@ export const PassageOrderDisplay = ({ teams, onClear }: PassageOrderDisplayProps
 
                 <div className="grid gap-3">
                     {orderedTeams.map(team => {
-                        const isTop3 = team.passageOrder && team.passageOrder <= 3;
+                        const isTop3 = team.passage_order && team.passage_order <= 3;
                         const gradients: Record<number, string> = {
                             1: 'from-amber-400 to-yellow-500',
                             2: 'from-slate-300 to-slate-400',
@@ -44,21 +44,21 @@ export const PassageOrderDisplay = ({ teams, onClear }: PassageOrderDisplayProps
                                     }`}
                             >
                                 <div
-                                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${team.passageOrder && gradients[team.passageOrder]
-                                        ? `bg-gradient-to-br ${gradients[team.passageOrder]}`
+                                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${team.passage_order && gradients[team.passage_order]
+                                        ? `bg-gradient-to-br ${gradients[team.passage_order]}`
                                         : 'bg-gradient-to-br from-indigo-500 to-purple-600'
                                         }`}
                                 >
-                                    {team.passageOrder}
+                                    {team.passage_order}
                                 </div>
 
                                 <div className="flex-1">
                                     <h4 className="font-semibold text-white">{team.name}</h4>
                                 </div>
 
-                                {team.passageTime && (
+                                {team.passage_time && (
                                     <div className="px-4 py-2 bg-indigo-500/20 rounded-lg font-semibold text-indigo-300 text-sm">
-                                        {team.passageTime}
+                                        {team.passage_time}
                                     </div>
                                 )}
                             </div>

@@ -4,7 +4,6 @@ import { Navbar } from '../../components/Navbar';
 import { Modal } from '../../components/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
-import { DEFAULT_EVENT_ID } from '../../utils/storage';
 import './JuryScoring.css';
 
 export const ScoreTeam = () => {
@@ -14,6 +13,8 @@ export const ScoreTeam = () => {
     const navigate = useNavigate();
 
     const [scores, setScores] = useState<Record<string, number>>({});
+    const [criterionComments, setCriterionComments] = useState<Record<string, string>>({});
+    const [globalComments, setGlobalComments] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const team = teams.find(t => t.id === teamId);
@@ -22,14 +23,19 @@ export const ScoreTeam = () => {
 
     useEffect(() => {
         if (existingScore) {
-            setScores(existingScore.scores);
+            setScores(existingScore.scores || {});
+            setCriterionComments(existingScore.criterion_comments || {});
+            setGlobalComments(existingScore.global_comments || '');
         } else {
-            // Initialize scores with 0
             const initialScores: Record<string, number> = {};
+            const initialComments: Record<string, string> = {};
             criteria.forEach(c => {
                 initialScores[c.id] = 0;
+                initialComments[c.id] = '';
             });
             setScores(initialScores);
+            setCriterionComments(initialComments);
+            setGlobalComments('');
         }
     }, [existingScore, criteria]);
 
@@ -52,17 +58,29 @@ export const ScoreTeam = () => {
 
     const handleScoreChange = (criterionId: string, value: number) => {
         if (isLocked) return;
-
         const criterion = criteria.find(c => c.id === criterionId);
         if (!criterion) return;
-
-        // Clamp value between 0 and maxScore
         const clampedValue = Math.max(0, Math.min(value, criterion.max_score));
         setScores(prev => ({ ...prev, [criterionId]: clampedValue }));
     };
 
+    const handleCommentChange = (criterionId: string, value: string) => {
+        if (isLocked) return;
+        setCriterionComments(prev => ({ ...prev, [criterionId]: value }));
+    };
+
     const calculateTotal = () => {
-        return Object.values(scores).reduce((sum, score) => sum + score, 0);
+        let total = 0;
+        Object.entries(scores).forEach(([id, score]) => {
+            const criterion = criteria.find(c => c.id === id);
+            const weight = criterion?.weight || 1.0;
+            total += score * weight;
+        });
+        return Math.round(total * 100) / 100;
+    };
+
+    const calculateMaxTotal = () => {
+        return criteria.reduce((sum, c) => sum + (c.max_score * (c.weight || 1.0)), 0);
     };
 
     const handleSubmit = () => {
@@ -78,6 +96,8 @@ export const ScoreTeam = () => {
             team: teamId,
             event: currentEventId,
             scores,
+            criterion_comments: criterionComments,
+            global_comments: globalComments,
             locked: true,
             submitted_at: new Date().toISOString()
         });
@@ -87,7 +107,7 @@ export const ScoreTeam = () => {
     };
 
     const total = calculateTotal();
-    const maxTotal = criteria.reduce((sum, c) => sum + c.max_score, 0);
+    const maxTotal = calculateMaxTotal();
 
     return (
         <div className="jury-scoring-page">
@@ -106,6 +126,9 @@ export const ScoreTeam = () => {
                             </div>
                         )}
                     </div>
+                    {team.track && (
+                        <p className="text-slate-400 mt-2">Parcours : <span className="text-indigo-400 font-bold">{team.track}</span></p>
+                    )}
                 </div>
 
                 {criteria.length === 0 ? (
@@ -117,54 +140,82 @@ export const ScoreTeam = () => {
                     <>
                         <div className="scoring-grid-layout">
                             {criteria.map(criterion => (
-                                <div key={criterion.id} className="criterion-card">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="criterion-name">{criterion.name}</h3>
-                                        <span className="text-slate-400 text-sm">Max: {criterion.max_score} pts</span>
+                                <div key={criterion.id} className="criterion-card p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <h3 className="criterion-name text-lg font-bold">{criterion.name}</h3>
+                                            <p className="text-xs text-slate-500 uppercase tracking-wider">
+                                                Poids: {criterion.weight || 1.0} • Max: {criterion.max_score} pts
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-3 py-1 bg-slate-900 rounded-lg border border-slate-700">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max={criterion.max_score}
+                                                step="0.5"
+                                                value={scores[criterion.id] || 0}
+                                                onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
+                                                disabled={isLocked}
+                                                className="w-12 bg-transparent text-center font-bold text-indigo-400 focus:outline-none"
+                                            />
+                                            <span className="text-xs text-slate-500">/ {criterion.max_score}</span>
+                                        </div>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max={criterion.max_score}
-                                            step="0.5"
-                                            value={scores[criterion.id] || 0}
-                                            onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
-                                            disabled={isLocked}
-                                            className="score-slider"
-                                        />
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs text-slate-500">0</span>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max={criterion.max_score}
-                                                    step="0.5"
-                                                    value={scores[criterion.id] || 0}
-                                                    onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
-                                                    disabled={isLocked}
-                                                    className="w-20 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 text-center font-bold"
-                                                />
-                                                <span className="text-slate-400">pts</span>
+                                    <div className="space-y-6">
+                                        <div className="relative pt-2 pb-6">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max={criterion.max_score}
+                                                step="0.5"
+                                                value={scores[criterion.id] || 0}
+                                                onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
+                                                disabled={isLocked}
+                                                className="score-slider w-full h-3 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-indigo-500 touch-pan-x"
+                                            />
+                                            <div className="flex justify-between mt-2 px-1">
+                                                <span className="text-[10px] text-slate-600 font-bold">0</span>
+                                                <span className="text-[10px] text-slate-600 font-bold">{criterion.max_score}</span>
                                             </div>
-                                            <span className="text-xs text-slate-500">{criterion.max_score}</span>
+                                        </div>
+
+                                        <div className="mt-4">
+                                            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-2 block">Commentaire (optionnel)</label>
+                                            <textarea
+                                                value={criterionComments[criterion.id] || ''}
+                                                onChange={e => handleCommentChange(criterion.id, e.target.value)}
+                                                disabled={isLocked}
+                                                placeholder="Ex: Excellente démo, manque de clarté sur la partie technique..."
+                                                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all min-h-[80px]"
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="scoring-card">
-                            <div className="total-row-display mb-0">
+                        <div className="scoring-card mt-8">
+                            <h3 className="text-lg font-bold mb-4">Feedback Global</h3>
+                            <textarea
+                                value={globalComments}
+                                onChange={e => setGlobalComments(e.target.value)}
+                                disabled={isLocked}
+                                placeholder="Points forts, points faibles, et conseils pour l'équipe..."
+                                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-sm focus:border-indigo-500 transition-all min-h-[120px]"
+                            />
+                        </div>
+
+                        <div className="scoring-card sticky bottom-4 z-10 shadow-2xl border-indigo-500/30">
+                            <div className="total-row-display mb-0 flex justify-between items-center">
                                 <div>
-                                    <span className="total-label block">Total Provisoire</span>
-                                    <span className="text-slate-400 text-sm">Somme de tous les critères</span>
+                                    <span className="total-label block font-bold text-indigo-300">Total Pondéré</span>
+                                    <span className="text-slate-400 text-xs">Prend en compte les coefficients</span>
                                 </div>
-                                <div className="total-value-group">
-                                    <span className="total-score">{total}</span>
-                                    <span className="total-max">/ {maxTotal} points</span>
+                                <div className="total-value-group text-right">
+                                    <span className="total-score text-3xl font-black text-white">{total}</span>
+                                    <span className="total-max text-slate-500 block text-xs">sur {maxTotal} points possibles</span>
                                 </div>
                             </div>
 
@@ -172,12 +223,12 @@ export const ScoreTeam = () => {
                                 <div className="scoring-actions mt-8">
                                     <button
                                         onClick={handleSubmit}
-                                        className="btn-large-success"
+                                        className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
                                     >
-                                        ✓ Valider les Notes
+                                        ✓ Valider et Verrouiller les Notes
                                     </button>
-                                    <p className="text-slate-500 mt-4 text-sm">
-                                        ⚠️ Attention: Une fois validées, les notes ne pourront plus être modifiées
+                                    <p className="text-slate-500 mt-4 text-center text-xs flex items-center justify-center gap-1">
+                                        <span className="text-amber-500">⚠️</span> Cette action est irréversible
                                     </p>
                                 </div>
                             )}
@@ -189,43 +240,42 @@ export const ScoreTeam = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title="Confirmer la Validation"
+                title="Validation Finale"
             >
                 <div className="mb-8">
-                    <p className="text-lg">
-                        Vous êtes sur le point de valider vos notes pour <strong>{team.name}</strong>.
+                    <p className="text-slate-300">
+                        Vous confirmez les notes pour <strong>{team.name}</strong> ? Elles seront transmises à l'administrateur.
                     </p>
 
-                    <div className="bg-slate-800/50 p-6 rounded-xl mt-6 border border-slate-700/50">
-                        <h4 className="font-bold text-slate-300 mb-4 uppercase text-xs tracking-wider">Récapitulatif</h4>
-                        <ul className="recap-list">
-                            {criteria.map(criterion => (
-                                <li key={criterion.id} className="recap-item">
-                                    <span className="text-slate-300">{criterion.name}</span>
-                                    <span><strong>{scores[criterion.id] || 0}</strong> <span className="text-slate-500">/ {criterion.max_score}</span></span>
-                                </li>
+                    <div className="bg-slate-900 p-6 rounded-2xl mt-6 border border-slate-800">
+                        <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-800">
+                            <span className="text-slate-400 font-bold uppercase text-xs">Total Final</span>
+                            <span className="text-2xl font-black text-indigo-400">{total} <small className="text-xs text-slate-600">/ {maxTotal}</small></span>
+                        </div>
+                        <div className="space-y-3">
+                            {criteria.map(c => (
+                                <div key={c.id} className="flex justify-between text-sm">
+                                    <span className="text-slate-500">{c.name}</span>
+                                    <span className="font-bold">{scores[c.id] || 0} pts</span>
+                                </div>
                             ))}
-                        </ul>
-                        <div className="recap-total">
-                            <span>Total</span>
-                            <span>{total} / {maxTotal} pts</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 mt-6 text-amber-300/80 bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
-                        <span className="text-2xl">⚠️</span>
-                        <p className="text-sm">
-                            Une fois validées, ces notes seront verrouillées et vous ne pourrez plus les modifier.
+                    <div className="mt-6 flex items-start gap-3 p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                        <span className="text-xl">🛑</span>
+                        <p className="text-xs text-amber-200/80 leading-relaxed">
+                            <strong>Attention :</strong> Une fois validées, vous ne pourrez plus modifier ces notes, même en cas d'erreur.
                         </p>
                     </div>
                 </div>
 
-                <div className="flex gap-4 justify-end">
-                    <button onClick={() => setIsModalOpen(false)} className="btn-secondary">
-                        Annuler
+                <div className="flex gap-4">
+                    <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold transition-all">
+                        Retour
                     </button>
-                    <button onClick={confirmSubmit} className="btn-success">
-                        Confirmer et Verrouiller
+                    <button onClick={confirmSubmit} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-white shadow-lg shadow-indigo-900/20 transition-all">
+                        Confirmer
                     </button>
                 </div>
             </Modal>

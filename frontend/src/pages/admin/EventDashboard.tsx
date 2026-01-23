@@ -1,18 +1,26 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import { DashboardLayout } from '../../components/layouts/DashboardLayout';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { getJuryProgress, areAllTeamsScored } from '../../utils/calculations';
+import { Save, LayoutGrid, Info } from 'lucide-react';
 
 export const EventDashboard = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const { users, teams, criteria, teamScores, events, currentEventId, updateEvent } = useData();
+    const [instructions, setInstructions] = useState('');
 
     const currentEvent = events.find(e => e.id === currentEventId);
+
+    useEffect(() => {
+        if (currentEvent) {
+            setInstructions(currentEvent.instructions || '');
+        }
+    }, [currentEvent]);
     const juries = users.filter(u => u.role === 'jury');
     const allScored = areAllTeamsScored(teams, juries, teamScores);
 
@@ -25,6 +33,12 @@ export const EventDashboard = () => {
     const handleLogout = () => {
         logout();
         navigate('/');
+    };
+
+    const handleSaveInstructions = async () => {
+        if (currentEvent) {
+            await updateEvent(currentEvent.id, { instructions });
+        }
     };
 
     if (!currentEvent) {
@@ -108,6 +122,18 @@ export const EventDashboard = () => {
                     </Card>
                 </Link>
 
+                <Link to="/admin/live-queue" className="block">
+                    <Card className="group hover:shadow-lg hover:border-indigo-200 transition-all duration-300 h-full p-6 bg-gradient-to-br from-white to-indigo-50/50">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-slate-900">Live Queue</h3>
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <LayoutGrid size={18} />
+                            </div>
+                        </div>
+                        <p className="text-slate-500">Suivre l'ordre de passage en direct</p>
+                    </Card>
+                </Link>
+
                 <a href={`/results/${currentEventId}`} target="_blank" rel="noopener noreferrer" className="block">
                     <Card className="group hover:shadow-lg hover:border-amber-200 transition-all duration-300 h-full p-6 bg-gradient-to-br from-white to-amber-50/50">
                         <div className="flex justify-between items-center mb-4">
@@ -117,6 +143,41 @@ export const EventDashboard = () => {
                         <p className="text-slate-500">Voir la page de classement en temps réel</p>
                     </Card>
                 </a>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-8 mb-12">
+                <div className="lg:col-span-2">
+                    <Card className="p-8 border-none shadow-xl shadow-slate-200/50 bg-white">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Info size={20} className="text-indigo-600" />
+                            <h2 className="text-xl font-bold text-slate-900">Instructions de l'événement</h2>
+                        </div>
+                        <textarea
+                            value={instructions}
+                            onChange={(e) => setInstructions(e.target.value)}
+                            placeholder="Instructions pour les équipes et les jurys (ex: temps de pitch, format des supports...)"
+                            className="w-full h-40 p-4 rounded-xl border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-slate-600 leading-relaxed resize-none bg-slate-50"
+                        />
+                        <div className="mt-4 flex justify-end">
+                            <Button variant="primary" onClick={handleSaveInstructions} className="flex items-center gap-2">
+                                <Save size={18} /> Enregistrer les instructions
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="lg:col-span-1">
+                    {/* Placeholder for future action or stats */}
+                    <Card className="p-8 bg-indigo-900 text-white border-none h-full flex flex-col justify-center overflow-hidden relative">
+                        <div className="relative z-10">
+                            <h3 className="text-xl font-bold mb-2">Conseil Admin</h3>
+                            <p className="text-indigo-200 text-sm">
+                                N'oubliez pas de configurer les poids des critères pour une notation équilibrée.
+                            </p>
+                        </div>
+                        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                    </Card>
+                </div>
             </div>
 
             {juries.length > 0 && teams.length > 0 && (
