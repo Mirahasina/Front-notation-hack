@@ -20,7 +20,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { error, refresh } = useData();
+    const { error, isLoading, refresh } = useData();
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
 
     React.useEffect(() => {
@@ -58,6 +58,49 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     };
 
     const navItems = getNavItems();
+
+    // Full page loading / error states
+    const isInitialLoad = isLoading && navItems.length > 0;
+
+    if (error && isInitialLoad) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8">
+                <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200 border border-slate-100 max-w-lg w-full text-center">
+                    <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 transform -rotate-3">
+                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Problème de connexion</h2>
+                    <p className="text-slate-500 mb-10 leading-relaxed font-medium">{error}</p>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        className="rounded-2xl h-14 text-lg shadow-xl shadow-slate-900/10"
+                        onClick={() => refresh()}
+                    >
+                        Réessayer maintenant
+                    </Button>
+                    <p className="mt-6 text-xs text-slate-400 font-bold uppercase tracking-widest">Le serveur est peut-être en train de se réveiller</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+                <div className="relative">
+                    <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <img src="/Rise.png" alt="R" className="h-6 w-6 object-contain opacity-50" />
+                    </div>
+                </div>
+                <p className="mt-6 text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Chargement sécurisé...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
