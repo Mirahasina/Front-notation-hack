@@ -153,10 +153,6 @@ export const TeamDashboard = () => {
                 <div className="grid lg:grid-cols-3 gap-8 mb-12">
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
-                            <div className="flex justify-between items-start mb-8">
-                                <h2 className="text-3xl font-black text-slate-900">{currentTeam.name}</h2>
-                            </div>
-
                             <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 mb-8 space-y-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
@@ -330,7 +326,6 @@ export const TeamDashboard = () => {
                 <div className="space-y-8">
                     {myScores.length > 0 ? (
                         <div className="grid lg:grid-cols-2 gap-8">
-                            {/* Analysis Card */}
                             <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/50">
                                 <h3 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
                                     <Target className="text-indigo-500" size={24} />
@@ -342,7 +337,6 @@ export const TeamDashboard = () => {
                                 </p>
                             </div>
 
-                            {/* Rankings & Scores Card (Conditional) */}
                             <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
                                 {isResultsDay ? (
                                     <div className="relative z-10 space-y-8">
