@@ -24,7 +24,7 @@ export const calculateResults = (
 ): TeamResult[] => {
     const sortedCriteria = [...criteria].sort((a, b) => a.priority_order - b.priority_order);
 
-    const results: TeamResult[] = teams.map((team, index) => {
+    const results: TeamResult[] = teams.map((team) => {
         const juryScores = juries.map(jury => {
             const score = teamScores.find(
                 ts => ts.team === team.id && ts.jury === jury.id

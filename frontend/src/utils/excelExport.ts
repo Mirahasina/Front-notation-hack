@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 import type { Team } from '../types';
 
 export const exportTeamsToExcel = (teams: Team[]): void => {
-    const data = teams.map((team, index) => {
+    const data = teams.map((team) => {
         const platformName = `${team.name.replace(/\s+/g, '_')}`;
         return {
             'Nom du Projet': team.name,

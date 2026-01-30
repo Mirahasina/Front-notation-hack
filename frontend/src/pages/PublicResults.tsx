@@ -49,7 +49,6 @@ export const PublicResults = () => {
                     'Note Finale': team.score.toFixed(2),
                 };
 
-                // Add individual criteria scores
                 criteria.forEach(c => {
                     const avgScore = teamScores
                         .filter(ts => ts.team === team.id && ts.scores[c.id] !== undefined)
@@ -58,7 +57,6 @@ export const PublicResults = () => {
                     row[`${c.name} (Max ${c.max_score}, Poids ${c.weight})`] = avgScore.toFixed(2);
                 });
 
-                // Add comments summary
                 const comments = teamScores
                     .filter(ts => ts.team === team.id && ts.global_comments)
                     .map(ts => {

@@ -12,7 +12,7 @@ import { ImportExcelModal } from '../../components/ImportExcelModal';
 import { assignPassageOrder, clearPassageOrder } from '../../utils/randomizer';
 import { exportTeamsToExcel } from '../../utils/excelExport';
 
-const generatePlatformEmail = (baseEmail: string, teamName: string, index: number): string => {
+const generatePlatformEmail = (baseEmail: string, teamName: string): string => {
     if (!baseEmail || !baseEmail.includes('@')) return '';
     const [localPart, domain] = baseEmail.split('@');
     const platformName = teamName.replace(/\s+/g, '_');
@@ -38,7 +38,7 @@ export const ManageTeams = () => {
         }
     }, [teams.length, currentPage]);
 
-    const generatePlatformName = (teamName: string, index: number) => {
+    const generatePlatformName = (teamName: string) => {
         const baseName = teamName.replace(/\s+/g, '_');
         return `${baseName}`;
     };
@@ -47,11 +47,7 @@ export const ManageTeams = () => {
         if (!name) return;
         if (!currentEventId) return;
 
-        const teamIndex = editingId
-            ? teams.findIndex(t => t.id === editingId)
-            : teams.length;
-
-        const generated_email = email ? generatePlatformEmail(email, name, teamIndex) : undefined;
+        const generated_email = email ? generatePlatformEmail(email, name) : undefined;
 
         if (editingId) {
             await updateTeam(editingId, {
@@ -76,9 +72,9 @@ export const ManageTeams = () => {
     const handleImport = async (imported: Array<{ name: string; description?: string; email?: string }>) => {
         if (!currentEventId) return;
 
-        const teamsToCreate = imported.map((item, idx) => {
+        const teamsToCreate = imported.map((item) => {
             const teamEmail = item.email || item.description;
-            const generated_email = teamEmail ? generatePlatformEmail(teamEmail, item.name, teams.length + idx) : undefined;
+            const generated_email = teamEmail ? generatePlatformEmail(teamEmail, item.name) : undefined;
             return {
                 name: item.name,
                 email: teamEmail,
@@ -207,7 +203,7 @@ export const ManageTeams = () => {
                             const percentage = progress.total > 0
                                 ? Math.round((progress.scored / progress.total) * 100)
                                 : 0;
-                            const platformName = generatePlatformName(team.name, originalIndex);
+                            const platformName = generatePlatformName(team.name);
 
                             return (
                                 <Card key={team.id} className="group hover:shadow-lg transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
