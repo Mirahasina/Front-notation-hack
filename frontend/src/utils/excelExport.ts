@@ -3,7 +3,7 @@ import type { Team } from '../types';
 
 export const exportTeamsToExcel = (teams: Team[]): void => {
     const data = teams.map((team, index) => {
-        const platformName = `${team.name.replace(/\s+/g, '_')}_Team${index + 1}`;
+        const platformName = `${team.name.replace(/\s+/g, '_')}`;
         return {
             'Nom du Projet': team.name,
             'Nom Plateforme': platformName,
@@ -19,11 +19,11 @@ export const exportTeamsToExcel = (teams: Team[]): void => {
 
     // Auto-size columns
     const colWidths = [
-        { wch: 25 }, // Nom du Projet
-        { wch: 30 }, // Nom Plateforme
-        { wch: 35 }, // Email Généré
-        { wch: 15 }, // Ordre
-        { wch: 15 }  // Heure
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 35 },
+        { wch: 15 },
+        { wch: 15 }
     ];
     worksheet['!cols'] = colWidths;
 

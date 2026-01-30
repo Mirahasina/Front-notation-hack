@@ -16,7 +16,7 @@ const generatePlatformEmail = (baseEmail: string, teamName: string, index: numbe
     if (!baseEmail || !baseEmail.includes('@')) return '';
     const [localPart, domain] = baseEmail.split('@');
     const platformName = teamName.replace(/\s+/g, '_');
-    return `${localPart}+${platformName}_Team${index + 1}@${domain}`;
+    return `${localPart}+${platformName}@${domain}`;
 };
 
 export const ManageTeams = () => {
@@ -40,7 +40,7 @@ export const ManageTeams = () => {
 
     const generatePlatformName = (teamName: string, index: number) => {
         const baseName = teamName.replace(/\s+/g, '_');
-        return `${baseName}_Team${index + 1}`;
+        return `${baseName}`;
     };
 
     const handleSubmit = async () => {

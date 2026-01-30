@@ -44,7 +44,7 @@ export const calculateResults = (
         const totalScore = juryScores.reduce((sum, js) => sum + js.total, 0);
 
         const baseName = team.name.replace(/\s+/g, '_');
-        const platformName = `${baseName}_Team${index + 1}`;
+        const platformName = `${baseName}`;
 
         const criterionScores: Record<string, number> = {};
         criteria.forEach(c => {

@@ -107,7 +107,7 @@ export const Login = () => {
                 <form onSubmit={handleTeamLogin} className="space-y-4">
                     <Input
                         label="Email de l'équipe"
-                        placeholder="Ex: lova+RISE_Team1@gmail.com"
+                        placeholder="Ex: lova+RISE@gmail.com"
                         value={teamEmail}
                         onChange={e => setTeamEmail(e.target.value)}
                         fullWidth
