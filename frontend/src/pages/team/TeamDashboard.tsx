@@ -31,7 +31,6 @@ export const TeamDashboard = () => {
         );
     }
 
-    const teamIndex = teams.findIndex(t => t.id === currentTeam.id);
     const platformName = `${currentTeam.name.replace(/\s+/g, '_')}`;
 
     const now = new Date();
@@ -114,7 +113,6 @@ export const TeamDashboard = () => {
                         <img src="/Rise.png" alt="Rise" className="h-12 w-12 object-contain bg-white p-2 rounded-2xl shadow-sm border border-slate-100" />
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900">{currentTeam.name}</h1>
-                            <p className="text-slate-500 mt-1">Équipe #{teamIndex + 1} • {currentEvent?.name}</p>
                         </div>
                     </div>
 
@@ -154,13 +152,9 @@ export const TeamDashboard = () => {
             {activeTab === 'home' && (
                 <div className="grid lg:grid-cols-3 gap-8 mb-12">
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Passage Card Style - Inspired by user photo */}
                         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
                             <div className="flex justify-between items-start mb-8">
                                 <h2 className="text-3xl font-black text-slate-900">{currentTeam.name}</h2>
-                                <div className="px-4 py-1.5 bg-slate-50 rounded-xl text-slate-400 font-bold text-sm">
-                                    #{teamIndex + 1}
-                                </div>
                             </div>
 
                             <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 mb-8 space-y-4">
@@ -198,7 +192,6 @@ export const TeamDashboard = () => {
                                 </div>
 
                                 <div className="space-y-6">
-                                    {/* Team Before */}
                                     {teamBefore && (
                                         <div className="flex items-center gap-4 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-500">
                                             <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold">
@@ -208,12 +201,10 @@ export const TeamDashboard = () => {
                                         </div>
                                     )}
 
-                                    {/* Separation */}
                                     <div className="flex flex-col items-center w-8 gap-1 opacity-20">
                                         <div className="w-0.5 h-4 bg-white rounded-full"></div>
                                     </div>
 
-                                    {/* Current Team Status */}
                                     <div className="flex items-center gap-6">
                                         <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
                                             <span className="text-xl font-black">{myPosition || '?'}</span>
@@ -237,12 +228,10 @@ export const TeamDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Separation */}
                                     <div className="flex flex-col items-center w-8 gap-1 opacity-20">
                                         <div className="w-0.5 h-4 bg-white rounded-full"></div>
                                     </div>
 
-                                    {/* Team After */}
                                     {teamAfter && (
                                         <div className="flex items-center gap-4 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-500">
                                             <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold">
