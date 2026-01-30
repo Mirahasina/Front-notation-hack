@@ -32,7 +32,7 @@ export const TeamDashboard = () => {
     }
 
     const teamIndex = teams.findIndex(t => t.id === currentTeam.id);
-    const platformName = `${currentTeam.name.replace(/\s+/g, '_')}_Team${teamIndex + 1}`;
+    const platformName = `${currentTeam.name.replace(/\s+/g, '_')}`;
 
     const now = new Date();
     const eventDate = currentEvent ? new Date(currentEvent.date) : new Date();
@@ -56,7 +56,7 @@ export const TeamDashboard = () => {
                         totalWeighted += (score * (crit?.weight || 1.0));
                     });
                 });
-                return { id: t.id, total: totalWeighted / results.length }; // Average per jury
+                return { id: t.id, total: totalWeighted / results.length }; 
             })
             .sort((a, b) => b.total - a.total);
 
@@ -395,7 +395,6 @@ export const TeamDashboard = () => {
                                 <Trophy className="absolute -bottom-8 -right-8 w-64 h-64 text-white/5 -rotate-12" />
                             </div>
 
-                            {/* Feedbacks - Always visible once locked */}
                             <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/50">
                                 <h3 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
                                     <MessageSquare className="text-indigo-500" size={24} />
