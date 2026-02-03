@@ -6,7 +6,8 @@ from django.contrib.auth.password_validation import validate_password
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['id', 'name', 'date', 'status', 'description', 'instructions', 'created_at']
+        fields = ['id', 'name', 'date', 'status', 'description', 'instructions', 
+                  'has_presentations', 'presentation_start_time', 'presentation_duration', 'created_at']
         read_only_fields = ['created_at']
 
 

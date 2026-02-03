@@ -15,6 +15,9 @@ class Event(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ongoing')
     description = models.TextField(blank=True, null=True)
     instructions = models.TextField(blank=True, null=True)
+    has_presentations = models.BooleanField(default=True)
+    presentation_start_time = models.CharField(max_length=10, blank=True, null=True, default='08:00')
+    presentation_duration = models.IntegerField(default=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
