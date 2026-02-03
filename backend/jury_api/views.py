@@ -63,7 +63,32 @@ def logout_view(request):
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        self._update_event_statuses(queryset)
+        return queryset
+
+    def _update_event_statuses(self, queryset):
+        now = timezone.now().date()
+        for event in queryset:
+            if event.status == 'completed':
+                continue
+            
+            event_date = event.date.date()
+            new_status = event.status
+            
+            if event_date < now:
+                new_status = 'completed'
+            elif event_date == now:
+                new_status = 'ongoing'
+            else:
+                new_status = 'upcoming'
+            
+            if new_status != event.status:
+                event.status = new_status
+                event.save(update_fields=['status'])
+
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             permission_classes = [permissions.AllowAny]
