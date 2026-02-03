@@ -17,7 +17,6 @@ export const exportTeamsToExcel = (teams: Team[]): void => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Équipes');
 
-    // Auto-size columns
     const colWidths = [
         { wch: 25 },
         { wch: 30 },

@@ -9,7 +9,9 @@ import { Users, Clock, Play, CheckCircle } from 'lucide-react';
 export const LiveQueue = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { teams, users, teamScores } = useData();
+    const { teams, users, teamScores, events, currentEventId } = useData();
+
+    const currentEvent = events.find(e => e.id === currentEventId);
 
     const handleLogout = () => {
         logout();
@@ -35,6 +37,23 @@ export const LiveQueue = () => {
         const juriesCount = users.filter(u => u.role === 'jury').length;
         return team.passage_order && scoredCount >= juriesCount;
     }).sort((a, b) => (b.passage_order || 0) - (a.passage_order || 0));
+
+    if (currentEvent && currentEvent.has_presentations === false) {
+        return (
+            <DashboardLayout userType="admin" userName={user?.username || 'Admin'} onLogout={handleLogout}>
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 shadow-sm">
+                    <Clock size={48} className="text-slate-300 mb-4" />
+                    <h2 className="text-2xl font-bold text-slate-700 mb-2">Pas de présentations</h2>
+                    <p className="text-slate-500 mb-8 max-w-md text-center">
+                        Les présentations sont désactivées pour cet événement. Vous ne pouvez pas suivre l'ordre de passage.
+                    </p>
+                    <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
+                        Retour au Dashboard
+                    </Button>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout userType="admin" userName={user?.username || 'Admin'} onLogout={handleLogout}>

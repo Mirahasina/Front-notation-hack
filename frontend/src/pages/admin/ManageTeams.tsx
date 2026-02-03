@@ -22,7 +22,7 @@ const generatePlatformEmail = (baseEmail: string, teamName: string): string => {
 export const ManageTeams = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { teams, addTeam, bulkAddTeams, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId, refresh } = useData();
+    const { events, teams, addTeam, bulkAddTeams, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId, refresh } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,7 +88,12 @@ export const ManageTeams = () => {
     };
 
     const handleRandomize = async () => {
-        const ordered = assignPassageOrder(teams, '08h00', 8);
+        if (!currentEventId) return;
+        const currentEvent = (events as any[]).find(e => e.id === currentEventId);
+        const startTime = currentEvent?.presentation_start_time || '08:00';
+        const duration = currentEvent?.presentation_duration || 15;
+
+        const ordered = assignPassageOrder(teams, startTime, duration);
         for (const team of ordered) {
             await updateTeam(team.id, {
                 passage_order: team.passage_order,
@@ -172,12 +177,16 @@ export const ManageTeams = () => {
                             <Button variant="danger" onClick={handleDeleteAll}>
                                 Tout effacer
                             </Button>
-                            <Button variant="secondary" onClick={handleClearOrder}>
-                                Réinitialiser l'ordre
-                            </Button>
-                            <Button variant="primary" onClick={handleRandomize}>
-                                Tirage au sort
-                            </Button>
+                            {((events as any[]).find(e => e.id === currentEventId))?.has_presentations !== false && (
+                                <>
+                                    <Button variant="secondary" onClick={handleClearOrder}>
+                                        Réinitialiser l'ordre
+                                    </Button>
+                                    <Button variant="primary" onClick={handleRandomize}>
+                                        Tirage au sort
+                                    </Button>
+                                </>
+                            )}
                         </>
                     )}
                     <Button variant="primary" onClick={() => setIsModalOpen(true)}>
@@ -230,7 +239,7 @@ export const ManageTeams = () => {
                                                     </span>
                                                 </div>
                                             )}
-                                            {team.passage_order && (
+                                            {team.passage_order && ((events as any[]).find(e => e.id === currentEventId))?.has_presentations !== false && (
                                                 <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
                                                     <span className="text-[10px] text-slate-400 uppercase font-bold">Passage</span>
                                                     <div className="flex items-center gap-2">

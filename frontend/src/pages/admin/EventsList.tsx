@@ -21,14 +21,27 @@ export const EventsList = () => {
     const [date, setDate] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState<Event['status']>('upcoming');
+    const [hasPresentations, setHasPresentations] = useState(true);
+    const [presentationStartTime, setPresentationStartTime] = useState('08:00');
+    const [presentationDuration, setPresentationDuration] = useState(10);
 
     const handleSubmit = async () => {
         if (!name || !date) return;
 
+        const eventData = {
+            name,
+            date,
+            description,
+            status,
+            has_presentations: hasPresentations,
+            presentation_start_time: presentationStartTime,
+            presentation_duration: presentationDuration
+        };
+
         if (editingId) {
-            await updateEvent(editingId, { name, date, description, status });
+            await updateEvent(editingId, eventData);
         } else {
-            await addEvent({ name, date, description, status });
+            await addEvent(eventData);
         }
 
         resetForm();
@@ -39,6 +52,9 @@ export const EventsList = () => {
         setDate('');
         setDescription('');
         setStatus('upcoming');
+        setHasPresentations(true);
+        setPresentationStartTime('08:00');
+        setPresentationDuration(10);
         setEditingId(null);
         setIsModalOpen(false);
     };
@@ -48,6 +64,9 @@ export const EventsList = () => {
         setDate(event.date.split('T')[0]);
         setDescription(event.description || '');
         setStatus(event.status);
+        setHasPresentations(event.has_presentations ?? true);
+        setPresentationStartTime(event.presentation_start_time || '08:00');
+        setPresentationDuration(event.presentation_duration || 10);
         setEditingId(event.id);
         setIsModalOpen(true);
     };
@@ -130,6 +149,20 @@ export const EventsList = () => {
                                             day: 'numeric'
                                         })}
                                     </p>
+                                    <div className="flex gap-4 mb-2">
+                                        {!event.has_presentations ? (
+                                            <span className="text-xs text-slate-500 italic">Pas de présentation</span>
+                                        ) : (
+                                            <div className="flex gap-3">
+                                                <span className="text-xs text-slate-500">
+                                                    Démarrage: <b>{event.presentation_start_time?.replace(':', 'h')}</b>
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    Durée: <b>{event.presentation_duration} min/groupe</b>
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                     {event.description && (
                                         <p className="text-slate-600 text-sm line-clamp-2 max-w-2xl">{event.description}</p>
                                     )}
@@ -167,15 +200,66 @@ export const EventsList = () => {
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Date *</label>
-                        <input
-                            type="date"
-                            value={date}
-                            onChange={e => setDate(e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1.5">Date *</label>
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={e => setDate(e.target.value)}
+                                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1.5">Statut</label>
+                            <select
+                                value={status}
+                                onChange={e => setStatus(e.target.value as Event['status'])}
+                                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                            >
+                                <option value="upcoming">À venir</option>
+                                <option value="ongoing">En cours</option>
+                                <option value="completed">Terminé</option>
+                            </select>
+                        </div>
                     </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <input
+                            type="checkbox"
+                            id="hasPresentations"
+                            checked={hasPresentations}
+                            onChange={e => setHasPresentations(e.target.checked)}
+                            className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        />
+                        <label htmlFor="hasPresentations" className="text-sm font-medium text-slate-700 cursor-pointer">
+                            Cet événement comporte des présentations
+                        </label>
+                    </div>
+
+                    {hasPresentations && (
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                            <div>
+                                <label className="block text-sm font-medium text-indigo-900 mb-1.5">Heure de début</label>
+                                <input
+                                    type="time"
+                                    value={presentationStartTime}
+                                    onChange={e => setPresentationStartTime(e.target.value)}
+                                    className="flex h-10 w-full rounded-md border border-indigo-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                />
+                            </div>
+                            <div>
+                                <Input
+                                    label="Durée / groupe (min)"
+                                    type="number"
+                                    value={presentationDuration}
+                                    onChange={e => setPresentationDuration(parseInt(e.target.value) || 0)}
+                                    min={1}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1.5">Description (optionnel)</label>

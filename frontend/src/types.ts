@@ -19,6 +19,9 @@ export interface Event {
     status: 'upcoming' | 'ongoing' | 'completed';
     description?: string;
     instructions?: string;
+    has_presentations?: boolean;
+    presentation_start_time?: string;
+    presentation_duration?: number;
     created_at: string;
 }
 

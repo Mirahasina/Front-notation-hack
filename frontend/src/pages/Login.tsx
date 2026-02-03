@@ -83,7 +83,6 @@ export const Login = () => {
             title={isTeamLogin ? "Espace Équipe" : "Espace Jury / Admin"}
             subtitle="Connectez-vous pour accéder à la plateforme"
         >
-            {/* Toggle Switch */}
             <div className="flex p-1 mb-8 bg-slate-100 rounded-xl relative">
                 <div
                     className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white shadow-sm rounded-lg transition-all duration-300 ease-out ${isTeamLogin ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'}`}
@@ -102,7 +101,6 @@ export const Login = () => {
                 </button>
             </div>
 
-            {/* Forms */}
             {isTeamLogin ? (
                 <form onSubmit={handleTeamLogin} className="space-y-4">
                     <Input
