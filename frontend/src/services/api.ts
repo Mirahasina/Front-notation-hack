@@ -1,11 +1,11 @@
 import axios from 'axios';
-import type { User, Team, Criterion, TeamScore, Event } from '../types';
+import type { User, Team, Criterion, TeamScore, Event, Message } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const api = axios.create({
     baseURL: API_URL,
-    timeout: 60000, // 60 seconds to accommodate Render cold start
+    timeout: 60000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -90,6 +90,15 @@ export const reportApi = {
     getResults: (eventId: string) => api.get('/results/', { params: { event_id: eventId } }),
     checkCompletion: (eventId: string) => api.get('/check-completion/', { params: { event_id: eventId } }),
     getJuryProgress: (juryId: string) => api.get(`/jury-progress/${juryId}/`),
+};
+
+export const messageApi = {
+    list: () => api.get<any>('/messages/'),
+    send: (data: { content: string; event: string; recipient?: number | null; recipients?: number[] }) =>
+        api.post<Message>('/messages/', data),
+    delete: (id: number) => api.delete(`/messages/${id}/`),
+    clearConversation: (userId: number) => api.delete(`/messages/clear-conversation/${userId}/`),
+    markAsRead: (senderId?: number) => api.post('/messages/mark_as_read/', { sender_id: senderId }),
 };
 
 export default api;

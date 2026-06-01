@@ -20,39 +20,47 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { error, isLoading, refresh } = useData();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
+    const { error, isLoading, refresh, unreadMessagesCount, events, currentEventId } = useData();
+    const currentEvent = events.find(e => e.id === currentEventId);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
 
     React.useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth > 768) {
-                setIsSidebarOpen(true);
-            } else {
+        const checkMobile = () => {
+            const mobile = window.innerWidth < 1024;
+            setIsMobile(mobile);
+            if (mobile) {
                 setIsSidebarOpen(false);
+            } else {
+                setIsSidebarOpen(true); // Keep sidebar open on larger screens by default
             }
         };
 
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     const getNavItems = () => {
         switch (userType) {
             case 'admin':
                 return [
-                    { label: 'Dashboard', path: '/admin/dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+                    { label: 'Gestion Événements', path: '/admin/events', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
                     { label: 'Équipes', path: '/admin/teams', icon: 'M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z' },
                     { label: 'Jurys', path: '/admin/juries', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
                     { label: 'Critères', path: '/admin/criteria', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+                    { label: 'Messages', path: '/admin/messages', icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
                 ];
             case 'jury':
                 return [
                     { label: 'Évaluations', path: '/jury/scoring', subtitle: 'Noter les passages', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+                    { label: 'Messages', path: '/jury/messages', subtitle: 'Contacter le Staff', icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
                     { label: 'Classement', path: '/results', subtitle: 'Résultats globaux', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
                 ];
             default:
                 return [
                     { label: 'Accueil', path: '/team/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+                    { label: 'Messages', path: '/team/dashboard', icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z' },
                 ];
         }
     };
@@ -143,6 +151,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                             </div>
                         </div>
 
+                        {isSidebarOpen && userType === 'admin' && currentEvent && (
+                            <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/30">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Événement Actif</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    <span className="text-xs font-bold text-slate-700 truncate">{currentEvent.name}</span>
+                                </div>
+                            </div>
+                        )}
+
                         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
                             {navItems.map((item) => {
                                 const isActive = location.pathname === item.path;
@@ -159,18 +177,30 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                                             }`}
                                         title={!isSidebarOpen ? item.label : ''}
                                     >
-                                        <svg className={`shrink-0 w-6 h-6 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                                        </svg>
-                                        {(isSidebarOpen || window.innerWidth < 768) && (
-                                            <div className="flex flex-col items-start">
-                                                <span className="font-medium text-sm leading-none">{item.label}</span>
-                                                {(item as any).subtitle && (
-                                                    <span className={`text-[10px] mt-1 font-medium uppercase tracking-wider ${isActive ? 'text-white/60' : 'text-slate-400'}`}>
-                                                        {(item as any).subtitle}
+                                        <span className="relative shrink-0 flex items-center justify-center">
+                                            <svg className={`w-6 h-6 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                                            </svg>
+                                            {item.label === 'Messages' && unreadMessagesCount > 0 && !isSidebarOpen && (
+                                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-sm"></span>
+                                            )}
+                                        </span>
+                                        {(isSidebarOpen || isMobile) && (
+                                            <span className="flex-1 flex items-center justify-between min-w-0">
+                                                <span className="flex flex-col items-start min-w-0">
+                                                    <span className="font-medium text-sm leading-none truncate">{item.label}</span>
+                                                    {(item as any).subtitle && (
+                                                        <span className={`text-[10px] mt-1 font-medium uppercase tracking-wider ${(isActive ? 'text-white/60' : 'text-slate-400')} truncate`}>
+                                                            {(item as any).subtitle}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                {item.label === 'Messages' && unreadMessagesCount > 0 && (
+                                                    <span className="bg-red-500 text-white text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center shadow-lg shadow-red-200">
+                                                        {unreadMessagesCount}
                                                     </span>
                                                 )}
-                                            </div>
+                                            </span>
                                         )}
                                     </button>
                                 );
@@ -182,14 +212,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
                                     {userName.charAt(0).toUpperCase()}
                                 </div>
-                                {(isSidebarOpen || window.innerWidth < 768) && (
+                                {(isSidebarOpen || isMobile) && (
                                     <div className="flex-1 overflow-hidden">
                                         <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
                                         <p className="text-xs text-slate-500 capitalize">{userType}</p>
                                     </div>
                                 )}
                             </div>
-                            {(isSidebarOpen || window.innerWidth < 768) && (
+                            {(isSidebarOpen || isMobile) && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -221,18 +251,41 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <p className="text-sm font-bold text-red-900">Problème de connexion</p>
-                                    <p className="text-xs text-red-700">{error}</p>
+                                    <p className="text-xs text-red-700 truncate">{error}</p>
                                 </div>
                             </div>
                             <Button
                                 variant="primary"
                                 size="sm"
-                                className="bg-red-600 hover:bg-red-700 border-none shrink-0"
+                                className="bg-red-600 hover:bg-red-700 border-none shrink-0 rounded-xl px-4"
                                 onClick={() => refresh()}
                             >
                                 Réessayer
+                            </Button>
+                        </div>
+                    )}
+
+                    {!currentEventId && userType === 'admin' && location.pathname !== '/admin/dashboard' && (
+                        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl shadow-inner">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-lg font-black text-amber-900 leading-tight">Aucun événement sélectionné</p>
+                                    <p className="text-sm text-amber-700 font-medium mt-0.5">Vous devez sélectionner un événement dans la liste pour gérer les projets, jurys et critères.</p>
+                                </div>
+                            </div>
+                            <Button
+                                variant="primary"
+                                className="bg-amber-600 hover:bg-amber-700 border-none shadow-lg shadow-amber-200 shrink-0 h-12 px-6 rounded-xl font-bold"
+                                onClick={() => navigate('/admin/dashboard')}
+                            >
+                                Choisir un événement
                             </Button>
                         </div>
                     )}

@@ -6,7 +6,9 @@ import { EventDashboard } from './pages/admin/EventDashboard';
 import { ManageJuries } from './pages/admin/ManageJuries';
 import { ManageCriteria } from './pages/admin/ManageCriteria';
 import { ManageTeams } from './pages/admin/ManageTeams';
+import { AdminMessages } from './pages/admin/AdminMessages';
 import { JuryScoring } from './pages/jury/JuryScoring';
+import { JuryMessages } from './pages/jury/JuryMessages';
 import { TeamDashboard } from './pages/team/TeamDashboard';
 import { PublicResults } from './pages/PublicResults';
 import { LiveQueue } from './pages/admin/LiveQueue';
@@ -54,7 +56,6 @@ function App() {
     );
   }
 
-  // Routes pour les admins
   if (isAdmin) {
     return (
       <Routes>
@@ -63,6 +64,7 @@ function App() {
         <Route path="/admin/juries" element={<ManageJuries />} />
         <Route path="/admin/criteria" element={<ManageCriteria />} />
         <Route path="/admin/teams" element={<ManageTeams />} />
+        <Route path="/admin/messages" element={<AdminMessages />} />
         <Route path="/admin/live-queue" element={<LiveQueue />} />
         <Route path="/results" element={<PublicResults />} />
         <Route path="/results/:eventId" element={<PublicResults />} />
@@ -71,10 +73,10 @@ function App() {
     );
   }
 
-  // Routes pour les jurys
   return (
     <Routes>
       <Route path="/jury/scoring" element={<JuryScoring />} />
+      <Route path="/jury/messages" element={<JuryMessages />} />
       <Route path="/results" element={<PublicResults />} />
       <Route path="/results/:eventId" element={<PublicResults />} />
       <Route path="*" element={<Navigate to="/jury/scoring" replace />} />

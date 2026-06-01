@@ -23,6 +23,7 @@ export const ManageTeams = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const { events, teams, addTeam, bulkAddTeams, updateTeam, deleteTeam, deleteAllTeams, users, teamScores, currentEventId, refresh } = useData();
+    const currentEvent = (events as any[]).find(e => e.id === currentEventId);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -159,14 +160,21 @@ export const ManageTeams = () => {
         <DashboardLayout userType="admin" userName={user?.username || 'Admin'} onLogout={handleLogout}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Gestion des Projets</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        Gestion des Projets {currentEvent ? `- ${currentEvent.name}` : ''}
+                    </h1>
                     <p className="text-slate-500 mt-1">Gérez les équipes et leur ordre de passage</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
                         ← Retour
                     </Button>
-                    <Button variant="secondary" onClick={() => setIsImportModalOpen(true)}>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setIsImportModalOpen(true)}
+                        disabled={!currentEventId}
+                        title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                    >
                         Importer Excel
                     </Button>
                     {teams.length > 0 && (
@@ -179,17 +187,30 @@ export const ManageTeams = () => {
                             </Button>
                             {((events as any[]).find(e => e.id === currentEventId))?.has_presentations !== false && (
                                 <>
-                                    <Button variant="secondary" onClick={handleClearOrder}>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleClearOrder}
+                                        disabled={!currentEventId}
+                                    >
                                         Réinitialiser l'ordre
                                     </Button>
-                                    <Button variant="primary" onClick={handleRandomize}>
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleRandomize}
+                                        disabled={!currentEventId}
+                                    >
                                         Tirage au sort
                                     </Button>
                                 </>
                             )}
                         </>
                     )}
-                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsModalOpen(true)}
+                        disabled={!currentEventId}
+                        title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                    >
                         + Nouveau Projet
                     </Button>
                 </div>
@@ -199,7 +220,12 @@ export const ManageTeams = () => {
                 <Card className="flex flex-col items-center justify-center py-20 border-dashed border-2 border-slate-200">
                     <h3 className="text-2xl font-bold text-slate-700 mb-2">Aucun projet enregistré</h3>
                     <p className="text-slate-500 mb-8 max-w-md text-center">Commencez par ajouter un projet manuellement ou importez une liste depuis un fichier Excel</p>
-                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsModalOpen(true)}
+                        disabled={!currentEventId}
+                        title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                    >
                         Créer mon premier projet
                     </Button>
                 </Card>
@@ -355,7 +381,7 @@ export const ManageTeams = () => {
                         <Button
                             variant="primary"
                             onClick={handleSubmit}
-                            disabled={!name}
+                            disabled={!currentEventId || !name}
                         >
                             {editingId ? 'Sauvegarder' : 'Créer le projet'}
                         </Button>

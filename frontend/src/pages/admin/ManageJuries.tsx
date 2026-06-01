@@ -13,12 +13,14 @@ import type { User } from '../../types';
 export const ManageJuries = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { users, addUser, updateUser, deleteUser, criteria, currentEventId } = useData();
+    const { users, addUser, updateUser, deleteUser, criteria, currentEventId, events } = useData();
+    const currentEvent = events.find(e => e.id === currentEventId);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingJury, setEditingJury] = useState<User | null>(null);
     const [juryName, setJuryName] = useState('');
     const [juryPassword, setJuryPassword] = useState('');
     const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<string[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     const juries = users.filter(u => u.role === 'jury');
 
@@ -38,54 +40,109 @@ export const ManageJuries = () => {
     };
 
     const handleSaveJury = async () => {
+        setError(null);
         if (!juryName.trim() || !currentEventId) return;
 
-        if (editingJury) {
-            const updates: Partial<User> = {
-                username: juryName,
-                assigned_criteria: selectedCriteriaIds
-            };
-            if (juryPassword.trim()) {
-                updates.password = juryPassword.trim();
-            }
-            await updateUser(editingJury.id, updates);
-        } else {
-            // Generate base username
-            const cleanName = juryName.toLowerCase().replace(/[^a-z0-9]/g, '');
-            let username = cleanName;
-            let counter = 1;
-
-            // Check for duplicates and append counter if needed
-            while (users.some(u => u.username === username)) {
-                counter++;
-                username = `${cleanName}${counter}`;
-            }
-
-            let credentials;
-            if (juryPassword.trim()) {
-                // Manual password
-                credentials = {
-                    username,
-                    password: juryPassword.trim()
+        try {
+            if (editingJury) {
+                const updates: Partial<User> = {
+                    username: juryName,
+                    assigned_criteria: selectedCriteriaIds
                 };
+                if (juryPassword.trim()) {
+                    updates.password = juryPassword.trim();
+                }
+                await updateUser(editingJury.id, updates);
             } else {
-                // Auto generated password
-                const { password } = generateJuryCredentials(juryName); // Just get the password
-                credentials = {
-                    username,
-                    password
-                };
+                // Generate base username
+                const cleanName = juryName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                let username = cleanName;
+                let counter = 1;
+
+                // Check for duplicates and append counter if needed
+                while (users.some(u => u.username === username)) {
+                    counter++;
+                    username = `${cleanName}${counter}`;
+                }
+
+                let credentials;
+                if (juryPassword.trim()) {
+                    // Manual password
+                    credentials = {
+                        username,
+                        password: juryPassword.trim()
+                    };
+                } else {
+                    // Auto generated password
+                    const { password } = generateJuryCredentials(juryName); // Just get the password
+                    credentials = {
+                        username,
+                        password
+                    };
+                }
+
+                await addUser({
+                    ...credentials,
+                    role: 'jury',
+                    event: currentEventId,
+                    assigned_criteria: selectedCriteriaIds
+                });
             }
 
-            await addUser({
-                ...credentials,
-                role: 'jury',
-                event: currentEventId,
-                assigned_criteria: selectedCriteriaIds
-            });
-        }
+            handleCloseModal();
+        } catch (err: any) {
+            console.error("Error saving jury:", err);
 
-        handleCloseModal();
+            // Check if error is about username duplication
+            const errorData = err.response?.data;
+            const isUsernameError = errorData?.username &&
+                Array.isArray(errorData.username) &&
+                errorData.username.some((msg: string) => msg.includes("existe déjà") || msg.includes("already exists"));
+
+            if (isUsernameError && !editingJury) {
+                // Auto-retry with random suffix if creating a new user
+                console.log("Username conflict detected, retrying with suffix...");
+                try {
+                    // Generate new credentials with aggressive random suffix
+                    const cleanName = juryName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                    const newUsername = `${cleanName}${randomSuffix}`;
+
+                    const { password } = generateJuryCredentials(juryName);
+                    const credentials = {
+                        username: newUsername,
+                        password: juryPassword.trim() || password
+                    };
+
+                    await addUser({
+                        ...credentials,
+                        role: 'jury',
+                        event: currentEventId,
+                        assigned_criteria: selectedCriteriaIds
+                    });
+
+                    handleCloseModal();
+                    return; // Success on retry
+                } catch (retryErr) {
+                    console.error("Retry failed:", retryErr);
+                    // Fall through to show error if retry fails
+                }
+            }
+
+            if (err.response?.data) {
+                // Handle field-specific errors
+                if (typeof errorData === 'object' && !errorData.detail) {
+                    const messages = Object.entries(errorData)
+                        .map(([field, msgs]) => `${field}: ${(msgs as any[]).join(', ')}`)
+                        .join(' | ');
+                    setError(messages);
+                } else {
+                    setError(errorData.detail || "Une erreur est survenue lors de l'enregistrement");
+                }
+            } else {
+                setError(err.message || "Une erreur inconnue est survenue");
+            }
+        }
     };
 
     const handleCloseModal = () => {
@@ -93,6 +150,7 @@ export const ManageJuries = () => {
         setJuryPassword('');
         setSelectedCriteriaIds([]);
         setEditingJury(null);
+        setError(null);
         setIsModalOpen(false);
     };
 
@@ -111,14 +169,21 @@ export const ManageJuries = () => {
         <DashboardLayout userType="admin" userName={user?.username || 'Admin'} onLogout={handleLogout}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Gestion des Jurys</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        Gestion des jurys {currentEvent ? `- ${currentEvent.name}` : ''}
+                    </h1>
                     <p className="text-slate-500 mt-1">Créez et gérez les comptes des membres du jury</p>
                 </div>
                 <div className="flex gap-3">
                     <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
                         ← Retour
                     </Button>
-                    <Button variant="primary" onClick={() => handleOpenModal()}>
+                    <Button
+                        variant="primary"
+                        onClick={() => handleOpenModal()}
+                        disabled={!currentEventId}
+                        title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                    >
                         + Nouveau jury
                     </Button>
                 </div>
@@ -179,7 +244,12 @@ export const ManageJuries = () => {
                     <Card className="col-span-full flex flex-col items-center justify-center py-20 border-dashed border-2 border-slate-200">
                         <h3 className="text-2xl font-bold text-slate-700 mb-2">Aucun jury enregistré</h3>
                         <p className="text-slate-500 mb-8">Ajoutez des membres au jury pour commencer la notation</p>
-                        <Button variant="primary" onClick={() => handleOpenModal()}>
+                        <Button
+                            variant="primary"
+                            onClick={() => handleOpenModal()}
+                            disabled={!currentEventId}
+                            title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                        >
                             Ajouter un membre du jury
                         </Button>
                     </Card>
@@ -192,6 +262,11 @@ export const ManageJuries = () => {
                 title={editingJury ? "Modifier le Jury" : "Ajouter un Jury"}
             >
                 <div className="flex flex-col gap-6">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium border border-red-100">
+                            {error}
+                        </div>
+                    )}
                     <div>
                         <Input
                             label="Nom complet"
@@ -260,7 +335,7 @@ export const ManageJuries = () => {
                         <Button
                             variant="primary"
                             onClick={handleSaveJury}
-                            disabled={!juryName.trim()}
+                            disabled={!currentEventId || !juryName.trim()}
                         >
                             {editingJury ? 'Enregistrer' : 'Créer le jury'}
                         </Button>

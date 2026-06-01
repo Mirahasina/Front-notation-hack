@@ -1,16 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import { DashboardLayout } from '../../components/layouts/DashboardLayout';
 import { TeamPerformanceRadar } from '../../components/TeamPerformanceRadar';
-import { Target, MessageSquare, Info, Zap, LayoutDashboard, Trophy, LogOut } from 'lucide-react';
+import MessageList from '../../components/MessageList';
+import MessageInput from '../../components/MessageInput';
+import { messageApi } from '../../services/api';
+import type { Message } from '../../types';
+import { Target, MessageSquare, Info, Zap, LayoutDashboard, Trophy, LogOut, Send } from 'lucide-react';
 
 export const TeamDashboard = () => {
-    const { currentTeam, logout } = useAuth();
-    const { teams, events, teamScores, criteria, users } = useData();
-    const [activeTab, setActiveTab] = useState<'home' | 'instructions' | 'results'>('home');
+    const { currentTeam, logout, user } = useAuth();
+    const { teams, events, teamScores, criteria, users, markMessagesAsRead, unreadMessagesCount } = useData();
+    const [activeTab, setActiveTab] = useState<'home' | 'instructions' | 'results' | 'messages'>('home');
+    const [messages, setMessages] = useState<Message[]>([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (activeTab === 'messages') {
+            loadMessages();
+            markMessagesAsRead();
+        }
+    }, [activeTab]);
+
+    const loadMessages = async () => {
+        try {
+            const response = await messageApi.list();
+            const messagesData = Array.isArray(response.data) ? response.data : (response.data.results || []);
+            setMessages(messagesData);
+        } catch (error) {
+            console.error('Failed to load messages:', error);
+            setMessages([]);
+        }
+    };
+
+    const handleSendMessage = async (content: string) => {
+        if (!currentTeam?.event) return;
+        try {
+            await messageApi.send({
+                content,
+                event: String(currentTeam.event),
+                recipient: null
+            });
+            await loadMessages();
+        } catch (error) {
+            console.error('Failed to send message:', error);
+        }
+    };
+
+    const handleDeleteMessage = async (id: number) => {
+        if (!confirm('Souhaitez-vous supprimer votre message ?')) return;
+        try {
+            await messageApi.delete(id);
+            await loadMessages();
+        } catch (error) {
+            console.error('Failed to delete message:', error);
+        }
+    };
 
     const currentEvent = events.find(e => e.id === currentTeam?.event);
     const myScores = teamScores.filter(ts => ts.team === currentTeam?.id && ts.locked);
@@ -55,7 +102,7 @@ export const TeamDashboard = () => {
                         totalWeighted += (score * (crit?.weight || 1.0));
                     });
                 });
-                return { id: t.id, total: totalWeighted / results.length }; 
+                return { id: t.id, total: totalWeighted / results.length };
             })
             .sort((a, b) => b.total - a.total);
 
@@ -137,6 +184,18 @@ export const TeamDashboard = () => {
                         >
                             <Trophy size={20} />
                             Résultats
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('messages')}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all relative ${activeTab === 'messages' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <Send size={20} />
+                            Messages
+                            {unreadMessagesCount > 0 && activeTab !== 'messages' && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center shadow-lg shadow-red-200 animate-bounce">
+                                    {unreadMessagesCount}
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={handleLogout}
@@ -318,6 +377,36 @@ export const TeamDashboard = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'messages' && (
+                <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 max-w-4xl mx-auto">
+                    <h2 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3">
+                        <MessageSquare className="text-indigo-500" size={28} />
+                        Messages au staff
+                    </h2>
+
+                    <div className="space-y-6">
+                        <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                            <p className="text-sm text-indigo-900 font-medium">
+                                💬 Utilisez cet espace pour poser des questions ou signaler des problèmes aux organisateurs.
+                            </p>
+                        </div>
+
+                        <MessageList
+                            messages={messages}
+                            currentUserId={Number(user?.id) || 0}
+                            onDelete={handleDeleteMessage}
+                        />
+
+                        <div className="pt-6 border-t border-slate-200">
+                            <MessageInput
+                                onSend={handleSendMessage}
+                                userRole="team"
+                            />
+                        </div>
                     </div>
                 </div>
             )}

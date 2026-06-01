@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Team, Criterion, TeamScore, Event } from '../types';
-import { eventApi, userApi, teamApi, criteriaApi, scoreApi } from '../services/api';
-const DEFAULT_EVENT_ID = 'event-juryhack-2025';
+import { eventApi, userApi, teamApi, criteriaApi, scoreApi, messageApi } from '../services/api';
 
 interface DataContextType {
     events: Event[];
@@ -34,6 +33,9 @@ interface DataContextType {
     saveTeamScore: (score: TeamScore) => Promise<void>;
     getTeamScore: (juryId: string, teamId: string) => TeamScore | undefined;
 
+    unreadMessagesCount: number;
+    markMessagesAsRead: (senderId?: number) => Promise<void>;
+
     refresh: () => Promise<void>;
     isLoading: boolean;
     error: string | null;
@@ -55,11 +57,15 @@ interface DataProviderProps {
 
 export const DataProvider = ({ children }: DataProviderProps) => {
     const [events, setEvents] = useState<Event[]>([]);
-    const [currentEventId, setCurrentEventIdState] = useState<string | null>(() => sessionStorage.getItem('current_event_id'));
+    const [currentEventId, setCurrentEventIdState] = useState<string | null>(() => {
+        const stored = sessionStorage.getItem('current_event_id');
+        return (stored && stored !== 'null') ? stored : null;
+    });
     const [users, setUsers] = useState<User[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [criteria, setCriteria] = useState<Criterion[]>([]);
     const [teamScores, setTeamScores] = useState<TeamScore[]>([]);
+    const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -71,11 +77,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 const data = response.data as any;
                 const eventsData = data.results || data;
                 setEvents(eventsData);
-                if (eventsData.length > 0 && !currentEventId) {
-                    const def = eventsData.find((e: Event) => e.id === DEFAULT_EVENT_ID || e.name.includes('2025'));
-                    const selectedId = def ? def.id : eventsData[0].id;
-                    setCurrentEventId(selectedId);
-                }
+                // Removed auto-selection logic to enforce manual selection by the admin
             } catch (err: any) {
                 console.error('Error fetching events:', err);
                 setError("Impossible de charger les événements. Le serveur est peut-être en train de redémarrer.");
@@ -87,7 +89,14 @@ export const DataProvider = ({ children }: DataProviderProps) => {
     }, []);
 
     useEffect(() => {
-        if (!currentEventId) return;
+        if (!currentEventId) {
+            // Explicitly clear data if no event is selected
+            setUsers([]);
+            setTeams([]);
+            setCriteria([]);
+            setTeamScores([]);
+            return;
+        }
 
         const fetchData = async () => {
             setIsLoading(true);
@@ -118,6 +127,51 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         };
         fetchData();
     }, [currentEventId]);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const response = await messageApi.list();
+            const messages = Array.isArray(response.data) ? response.data : (response.data.results || []);
+            // Get current user from session since auth context is separate
+            const userStr = sessionStorage.getItem('current_user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const unreadMessages = messages.filter((m: any) => {
+                    const isDirectlyForMe = Number(m.recipient) === Number(user.id);
+                    const isForStaff = user.role === 'admin' && m.recipient === null;
+                    return (isDirectlyForMe || isForStaff) && !m.is_read;
+                });
+
+                const count = unreadMessages.length;
+
+                if (count > 0) {
+                    console.log('[Unread Debug] Unread messages:', unreadMessages);
+                }
+
+                if (count !== unreadMessagesCount) {
+                    console.log(`[UnreadCount] Updating count to ${count} for user ${user.username} (Role: ${user.role})`);
+                }
+                setUnreadMessagesCount(count);
+            }
+        } catch (error) {
+            console.error('Failed to fetch unread count:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 15000); // Check every 15s
+        return () => clearInterval(interval);
+    }, []);
+
+    const markMessagesAsRead = async (senderId?: number) => {
+        try {
+            await messageApi.markAsRead(senderId);
+            await fetchUnreadCount();
+        } catch (error) {
+            console.error('Failed to mark messages as read:', error);
+        }
+    };
 
     const refresh = async () => {
         if (!currentEventId) return;
@@ -185,7 +239,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
     // Users
     const addUser = async (user: Omit<User, 'id'>): Promise<User> => {
-        const response = await userApi.create({ ...user, event: currentEventId || '' } as any);
+        if (!currentEventId) throw new Error("Aucun événement sélectionné");
+        const response = await userApi.create({ ...user, event: currentEventId } as any);
         const newUser = response.data;
         setUsers((prev: User[]) => [...prev, newUser]);
         return newUser;
@@ -203,7 +258,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
     // Teams
     const addTeam = async (team: Omit<Team, 'id' | 'created_at'>): Promise<Team> => {
-        const response = await teamApi.create({ ...team, event: currentEventId || '' } as any);
+        if (!currentEventId) throw new Error("Aucun événement sélectionné");
+        const response = await teamApi.create({ ...team, event: currentEventId } as any);
         const newTeam = response.data;
         setTeams((prev: Team[]) => [...prev, newTeam]);
         return newTeam;
@@ -246,7 +302,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
     // Criteria
     const addCriterion = async (criterion: Omit<Criterion, 'id' | 'created_at'>): Promise<Criterion> => {
-        const response = await criteriaApi.create({ ...criterion, event: currentEventId || '' } as any);
+        if (!currentEventId) throw new Error("Aucun événement sélectionné");
+        const response = await criteriaApi.create({ ...criterion, event: currentEventId } as any);
         const newCriterion = response.data;
         setCriteria((prev: Criterion[]) => [...prev, newCriterion]);
         return newCriterion;
@@ -307,6 +364,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         deleteCriterion,
         saveTeamScore,
         getTeamScore,
+        unreadMessagesCount,
+        markMessagesAsRead,
         refresh,
         isLoading,
         error

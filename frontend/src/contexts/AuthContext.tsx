@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Team } from '../types';
-import { authApi, teamApi } from '../services/api';
+import api, { authApi, teamApi } from '../services/api';
 
 const generateRandomPassword = (): string => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -79,64 +79,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const loginTeam = async (email: string, password?: string): Promise<TeamLoginResult> => {
         try {
-            const response = await teamApi.list({ generated_email: email });
-            const teamsData = (response.data as any).results || response.data;
-            const team = teamsData[0];
+            const response = await api.post('/auth/team-login/', { email, password });
+            const data = response.data;
 
-            if (!team) {
-                console.log('Team not found for email:', email);
-                return { success: false, isFirstLogin: false, error: 'Équipe non trouvée' };
+            if (data.isFirstLogin) {
+                return {
+                    success: true,
+                    isFirstLogin: true,
+                    generatedPassword: data.generatedPassword
+                };
             }
 
-            console.log('Team found:', team.name, 'has_logged_in:', team.has_logged_in, 'has password:', !!team.password);
+            const { token, user: loggedUser, team } = data;
 
-            // Première connexion - pas de mot de passe fourni ET l'équipe n'a jamais eu de mot de passe
-            if (!password && !team.password) {
-                const newPassword = generateRandomPassword();
-                console.log('First login detected! Generating password:', newPassword);
+            setUser(loggedUser);
+            setCurrentTeam(team);
+            sessionStorage.setItem('auth_token', token);
+            sessionStorage.setItem('current_user', JSON.stringify(loggedUser));
+            sessionStorage.setItem('current_team', JSON.stringify(team));
 
-                // Sauvegarder le mot de passe via API
-                await teamApi.update(team.id, {
-                    password: newPassword,
-                    has_logged_in: true
-                });
-
-                return { success: true, isFirstLogin: true, generatedPassword: newPassword };
-            }
-
-            if (password) {
-                if (team.password && team.password === password) {
-                    console.log('Password match! Logging in...');
-
-                    const loggedUser: User = {
-                        id: `team-${team.id}`,
-                        username: team.name,
-                        role: 'team',
-                        teamId: team.id
-                    };
-
-                    setUser(loggedUser);
-                    setCurrentTeam(team);
-                    // On n'a pas de token réel pour une équipe simulée, 
-                    // mais on en met un fictif pour ne pas casser la logique de l'API interceptor si besoin
-                    sessionStorage.setItem('auth_token', 'simulated-team-token');
-                    sessionStorage.setItem('current_user', JSON.stringify(loggedUser));
-                    sessionStorage.setItem('current_team', JSON.stringify(team));
-
-                    return { success: true, isFirstLogin: false };
-                } else {
-                    return { success: false, isFirstLogin: false, error: 'Mot de passe incorrect' };
-                }
-            }
-
-            if (team.password && !password) {
-                return { success: false, isFirstLogin: false, error: 'Veuillez entrer votre mot de passe' };
-            }
-
-            return { success: false, isFirstLogin: false, error: 'Erreur de connexion' };
-        } catch (error) {
+            return { success: true, isFirstLogin: false };
+        } catch (error: any) {
             console.error('Login team error:', error);
-            return { success: false, isFirstLogin: false, error: 'Erreur lors de la connexion' };
+            const message = error.response?.data?.error || 'Erreur lors de la connexion';
+            return { success: false, isFirstLogin: false, error: message };
         }
     };
 

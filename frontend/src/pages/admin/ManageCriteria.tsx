@@ -13,7 +13,8 @@ import { Pencil, Trash2 } from "lucide-react"
 export const ManageCriteria = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { criteria, addCriterion, updateCriterion, deleteCriterion, currentEventId, users, updateUser } = useData();
+    const { criteria, addCriterion, updateCriterion, deleteCriterion, currentEventId, users, updateUser, events } = useData();
+    const currentEvent = events.find(e => e.id === currentEventId);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
@@ -124,14 +125,21 @@ export const ManageCriteria = () => {
         <DashboardLayout userType="admin" userName={user?.username || 'Admin'} onLogout={handleLogout}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Gestion des Critères</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        Gestion des Critères {currentEvent ? `- ${currentEvent.name}` : ''}
+                    </h1>
                     <p className="text-slate-500 mt-1">Définissez les critères d'évaluation et leur pondération</p>
                 </div>
                 <div className="flex gap-3">
                     <Button variant="outline" onClick={() => navigate('/admin/event-dashboard')}>
                         ← Retour
                     </Button>
-                    <Button variant="primary" onClick={handleOpenNewModal}>
+                    <Button
+                        variant="primary"
+                        onClick={handleOpenNewModal}
+                        disabled={!currentEventId}
+                        title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                    >
                         + Nouveau Critère
                     </Button>
                 </div>
@@ -153,7 +161,7 @@ export const ManageCriteria = () => {
                 {criteria.length > 0 && (
                     <Card className="flex flex-col justify-between bg-amber-50 border-amber-100">
                         <div className="flex items-start gap-3">
-                            <span className="text-2xl">💡</span>
+                            <span className="text-2xl"> </span>
                             <div>
                                 <h3 className="text-lg font-bold text-amber-800 mb-1">Ordre de priorité</h3>
                                 <p className="text-amber-700/80 text-sm leading-relaxed">
@@ -169,7 +177,12 @@ export const ManageCriteria = () => {
                 <Card className="flex flex-col items-center justify-center py-20 border-dashed border-2 border-slate-200">
                     <h3 className="text-2xl font-bold text-slate-700 mb-2">Aucun critère défini</h3>
                     <p className="text-slate-500 mb-8">Commencez par ajouter des critères d'évaluation</p>
-                    <Button variant="primary" onClick={handleOpenNewModal}>
+                    <Button
+                        variant="primary"
+                        onClick={handleOpenNewModal}
+                        disabled={!currentEventId}
+                        title={!currentEventId ? "Veuillez d'abord sélectionner un événement" : ""}
+                    >
                         Créer mon premier critère
                     </Button>
                 </Card>
@@ -310,7 +323,7 @@ export const ManageCriteria = () => {
                         <Button
                             variant="primary"
                             onClick={handleSubmit}
-                            disabled={!name || !maxScore || Number(maxScore) <= 0 || !priorityOrder || Number(priorityOrder) <= 0}
+                            disabled={!currentEventId || !name || !maxScore || Number(maxScore) <= 0 || !priorityOrder || Number(priorityOrder) <= 0}
                         >
                             {editingId ? 'Mettre à jour' : 'Créer'}
                         </Button>

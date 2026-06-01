@@ -36,7 +36,7 @@ class User(AbstractUser):
         ('team', 'Team'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='jury')
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     track = models.CharField(max_length=100, blank=True, null=True)
     assigned_criteria = models.JSONField(default=list, blank=True)
     
@@ -46,7 +46,7 @@ class User(AbstractUser):
 
 class Criterion(models.Model):
     """Scoring criteria"""
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='criteria', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='criteria', null=False, blank=False)
     name = models.CharField(max_length=200)
     max_score = models.IntegerField(validators=[MinValueValidator(1)])
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
@@ -62,7 +62,7 @@ class Criterion(models.Model):
 
 
 class Team(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='teams', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='teams', null=False, blank=False)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
@@ -84,7 +84,7 @@ class Team(models.Model):
 
 
 class TeamScore(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='scores', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='scores', null=False, blank=False)
     jury = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'jury'})
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     scores = models.JSONField(default=dict)
@@ -129,3 +129,20 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} on {self.target_type} at {self.timestamp}"
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='messages', null=False, blank=False)
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'messages'
+        ordering = ['created_at']
+
+    def __str__(self):
+        recipient_name = self.recipient.username if self.recipient else "Staff"
+        return f"{self.sender.username} -> {recipient_name}"

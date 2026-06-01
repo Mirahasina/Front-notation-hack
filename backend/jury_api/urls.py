@@ -8,11 +8,13 @@ router.register(r'users', views.UserViewSet)
 router.register(r'criteria', views.CriterionViewSet)
 router.register(r'teams', views.TeamViewSet)
 router.register(r'team-scores', views.TeamScoreViewSet)
+router.register(r'messages', views.MessageViewSet, basename='message')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/login/', views.login_view, name='login'),
     path('auth/logout/', views.logout_view, name='logout'),
+    path('auth/team-login/', views.team_login_view, name='team-login'),
     path('ping/', views.ping_view, name='ping'),
     path('results/', views.results_view, name='results'),
     path('check-completion/', views.check_completion_view, name='check-completion'),

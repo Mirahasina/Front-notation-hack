@@ -11,7 +11,8 @@ import { ChangePasswordModal } from '../../components/admin/ChangePasswordModal'
 export const AdminDashboard = () => {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
-    const { users, teams, criteria, teamScores } = useData();
+    const { users, teams, criteria, teamScores, events, currentEventId } = useData();
+    const currentEvent = events.find(e => e.id === currentEventId);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     const juries = users.filter(u => u.role === 'jury');
@@ -22,18 +23,18 @@ export const AdminDashboard = () => {
         navigate('/');
     };
 
-     const statCards = [
-       { title: 'Jurys', value: juries.length, color: 'bg-blue-50 text-blue-600' },
-       { title: 'Équipes', value: teams.length, color: 'bg-purple-50 text-purple-600' },
-       { title: 'Critères', value: criteria.length, color: 'bg-emerald-50 text-emerald-600' },
-      { title: 'Statut', value: allScored ? 'Terminé' : 'En cours', color: allScored ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600' },
+    const statCards = [
+        { title: 'Jurys', value: juries.length, color: 'bg-blue-50 text-blue-600' },
+        { title: 'Équipes', value: teams.length, color: 'bg-purple-50 text-purple-600' },
+        { title: 'Critères', value: criteria.length, color: 'bg-emerald-50 text-emerald-600' },
+        { title: 'Statut', value: allScored ? 'Terminé' : 'En cours', color: allScored ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600' },
     ];
 
     const menuItems = [
         {
             title: 'Gestion des jurys',
             desc: 'Créer des comptes et suivre la progression',
-            path: '/admin/jurys',
+            path: '/admin/juries',
             count: juries.length,
             color: 'group-hover:text-blue-600'
         },
@@ -47,9 +48,26 @@ export const AdminDashboard = () => {
         {
             title: 'Gestion des critères',
             desc: 'Définir la grille de notation',
-            path: '/admin/criteres',
+            path: '/admin/criteria',
             count: criteria.length,
             color: 'group-hover:text-emerald-600'
+        },
+        {
+            title: 'Messages',
+            desc: 'Communiquer avec les équipes et jurys',
+            path: '/admin/messages',
+            count: null,
+            color: 'group-hover:text-indigo-600'
+        },
+        {
+            title: 'Progression des Jurys',
+            desc: 'Suivre l\'avancement des évaluations',
+            path: '/admin/juries',
+            count: `${juries.filter(j => {
+                const p = getJuryProgress(j.id, teams, teamScores);
+                return p.percentage === 100;
+            }).length}/${juries.length}`,
+            color: 'group-hover:text-teal-600'
         },
         {
             title: 'Résultats Publics',
@@ -69,7 +87,9 @@ export const AdminDashboard = () => {
         >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Tableau de bord</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        Tableau de bord {currentEvent ? `- ${currentEvent.name}` : ''}
+                    </h1>
                     <p className="text-slate-500 mt-1">Vue d'ensemble du hackathon</p>
                 </div>
                 <Button
@@ -123,46 +143,6 @@ export const AdminDashboard = () => {
                     </Card>
                 ))}
             </div>
-
-            {/* Jury Progress */}
-            {juries.length > 0 && teams.length > 0 && (
-                <div className="mb-10">
-                    <h2 className="text-xl font-bold text-slate-900 mb-6">Progression des Jurys</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {juries.map(jury => {
-                            const progress = getJuryProgress(jury.id, teams, teamScores);
-                            return (
-                                <Card key={jury.id} className="p-6">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h4 className="font-bold text-slate-900">{jury.username}</h4>
-                                            <p className="text-xs text-slate-500 mt-1">Jury Member</p>
-                                        </div>
-                                        <div className={`
-                                            px-2 py-1 rounded-lg text-xs font-bold
-                                            ${progress.percentage === 100
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-blue-50 text-blue-700'}
-                                        `}>
-                                            {progress.percentage}%
-                                        </div>
-                                    </div>
-
-                                    <div className="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-500 ${progress.percentage === 100 ? 'bg-green-500' : 'bg-blue-600'}`}
-                                            style={{ width: `${progress.percentage}%` }}
-                                        />
-                                    </div>
-                                    <p className="text-xs text-slate-500 text-right">
-                                        {progress.scored} / {progress.total} équipes notées
-                                    </p>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
 
             <ChangePasswordModal
                 isOpen={isPasswordModalOpen}

@@ -14,7 +14,17 @@ interface TeamPerformanceRadarProps {
 }
 
 export const TeamPerformanceRadar: React.FC<TeamPerformanceRadarProps> = ({ data }) => {
-    if (data.length === 0) return null;
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (data.length === 0 || !isMounted) return (
+        <div className="w-full h-[300px] md:h-[400px] flex items-center justify-center bg-slate-50/50 rounded-[2rem]">
+            <div className="animate-pulse text-slate-300 font-bold uppercase tracking-widest text-[10px]">Chargement du Radar...</div>
+        </div>
+    );
 
     return (
         <div className="w-full h-[300px] md:h-[400px]">

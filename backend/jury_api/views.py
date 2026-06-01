@@ -6,11 +6,11 @@ from django.contrib.auth import authenticate
 from django.db.models import Sum, Q
 from django.utils import timezone
 from django.core.cache import cache
-from .models import User, Criterion, Team, TeamScore, Event
+from .models import User, Criterion, Team, TeamScore, Event, Message
 from .serializers import (
     UserSerializer, LoginSerializer, CriterionSerializer,
     TeamSerializer, TeamScoreSerializer, TeamResultSerializer,
-    EventSerializer
+    EventSerializer, MessageSerializer
 )
 from .utils import log_action
 
@@ -58,6 +58,78 @@ def logout_view(request):
         except:
             pass
     return Response({'message': 'Logged out successfully'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def team_login_view(request):
+    """
+    Team login endpoint that creates/updates User objects for teams
+    and returns authentication tokens
+    """
+    email = request.data.get('email')
+    password = request.data.get('password')
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Find the team by email
+        from .models import Team
+        team = Team.objects.filter(generated_email=email).first()
+        
+        if not team:
+            return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # First login - no password provided AND team has no password
+        if not password and not team.password:
+            import random
+            import string
+            new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+            team.password = new_password
+            team.has_logged_in = True
+            team.save()
+            return Response({
+                'success': True,
+                'isFirstLogin': True,
+                'generatedPassword': new_password
+            })
+        
+        # Verify password
+        if not password or team.password != password:
+            return Response({'error': 'Invalid password'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Create or get User object for the team
+        user, created = User.objects.get_or_create(
+            username=team.generated_email or team.email,
+            defaults={
+                'role': 'team',
+                'email': team.email or team.generated_email,
+                'first_name': team.name,
+                'event': team.event
+            }
+        )
+        
+        # If user already exists, update their info
+        if not created:
+            user.role = 'team'
+            user.event = team.event
+            user.first_name = team.name
+            user.save()
+        
+        # Get or create auth token
+        token, _ = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'success': True,
+            'isFirstLogin': False,
+            'token': token.key,
+            'user': UserSerializer(user).data,
+            'team': TeamSerializer(team).data
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -424,3 +496,94 @@ def jury_progress_view(request, jury_id):
 @permission_classes([permissions.AllowAny])
 def ping_view(request):
     return Response({'status': 'ok', 'timestamp': timezone.now()})
+
+
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return Message.objects.none()
+        if user.role == 'admin':
+            return Message.objects.all()
+        return Message.objects.filter(Q(sender=user) | Q(recipient=user))
+
+    def perform_create(self, serializer):
+        sender = self.request.user
+        recipient = serializer.validated_data.get('recipient')
+        recipients = serializer.validated_data.get('recipients')
+        
+        if sender.role in ['team', 'jury']:
+            if recipients:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError("Teams and Juries cannot send multi-recipient messages.")
+                
+            if recipient:
+                if recipient.role != 'admin':
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError("You can only send messages to Staff (Admins).")
+            # If recipient is None, it's valid (to Staff)
+            serializer.save(sender=sender)
+            
+        elif sender.role == 'admin':
+            if recipients:
+                # Create a message for each recipient
+                for recipient_id in recipients:
+                    try:
+                        user = User.objects.get(id=recipient_id)
+                        Message.objects.create(
+                            sender=sender,
+                            recipient=user,
+                            event=serializer.validated_data.get('event'),
+                            content=serializer.validated_data.get('content')
+                        )
+                    except User.DoesNotExist:
+                        continue # Skip invalid users
+            else:
+                # Single message
+                serializer.save(sender=sender)
+
+    def destroy(self, request, *args, **kwargs):
+        message = self.get_object()
+        user = request.user
+        
+        # Admin can delete any message
+        # Others can only delete messages they sent
+        if user.role == 'admin' or message.sender == user:
+            return super().destroy(request, *args, **kwargs)
+        
+        from rest_framework import exceptions
+        raise exceptions.PermissionDenied("You can only delete your own messages.")
+
+    @action(detail=False, methods=['post'])
+    def mark_as_read(self, request):
+        user = request.user
+        sender_id = request.data.get('sender_id')
+        
+        if user.role == 'admin':
+            queryset = Message.objects.filter(Q(recipient=user) | Q(recipient__isnull=True), is_read=False)
+        else:
+            queryset = Message.objects.filter(recipient=user, is_read=False)
+            
+        if sender_id:
+            queryset = queryset.filter(sender_id=sender_id)
+            
+        count = queryset.update(is_read=True)
+        return Response({'marked_as_read': count}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], url_path='clear-conversation/(?P<user_id>[^/.]+)')
+    def clear_conversation(self, request, user_id=None):
+        if request.user.role != 'admin':
+            from rest_framework import exceptions
+            raise exceptions.PermissionDenied("Only Staff can clear conversations.")
+            
+        from django.db.models import Q
+        messages = Message.objects.filter(
+            Q(sender_id=user_id) | Q(recipient_id=user_id)
+        )
+        count = messages.count()
+        messages.delete()
+        
+        return Response({'message': f'Deleted {count} messages.', 'count': count}, status=status.HTTP_200_OK)

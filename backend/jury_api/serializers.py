@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Criterion, Team, TeamScore, Event
+from .models import User, Criterion, Team, TeamScore, Event, Message
 from django.contrib.auth.password_validation import validate_password
 
 
@@ -100,3 +100,21 @@ class TeamResultSerializer(serializers.Serializer):
     team_name = serializers.CharField()
     total_score = serializers.IntegerField()
     jury_scores = serializers.ListField()
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender_username = serializers.CharField(source='sender.username', read_only=True)
+    sender_role = serializers.CharField(source='sender.role', read_only=True)
+    recipient_username = serializers.CharField(source='recipient.username', read_only=True, allow_null=True)
+    recipients = serializers.ListField(
+        child=serializers.IntegerField(), write_only=True, required=False
+    )
+    
+    class Meta:
+        model = Message
+        fields = ['id', 'sender', 'sender_username', 'sender_role', 'recipient', 'recipient_username', 
+                  'recipients', 'event', 'content', 'is_read', 'created_at']
+        read_only_fields = ['sender', 'created_at', 'is_read']
+        extra_kwargs = {
+            'recipient': {'required': False}
+        }

@@ -84,6 +84,19 @@ export interface TeamResult {
     standardDeviation: number;
 }
 
+export interface Message {
+    id: number;
+    sender: number;
+    sender_username: string;
+    sender_role: string;
+    recipient: number | null;
+    recipient_username: string | null;
+    content: string;
+    is_read: boolean;
+    created_at: string;
+    event?: string;
+}
+
 export interface AppData {
     users: User[];
     events: Event[];
