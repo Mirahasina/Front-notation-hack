@@ -1,16 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Team } from '../types';
-import api, { authApi, teamApi } from '../services/api';
-
-const generateRandomPassword = (): string => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let password = '';
-    for (let i = 0; i < 8; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-};
+import api, { authApi } from '../services/api';
 
 export interface LoginResult {
     success: boolean;
